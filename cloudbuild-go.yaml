@@ -1,0 +1,8 @@
+# Build the module.
+steps:
+    - name: golang
+      args: ['go', 'build', '.']
+artifacts:
+  objects:
+    location: 'gs://nik-stehr-hpc'
+    paths: ['go-app']
