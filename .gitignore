@@ -2,6 +2,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/git,go,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=git,go,visualstudiocode
 
+# My own items
+.ignore
+
 ### Git ###
 # Created by git for backups. To disable backups in Git:
 # $ git config --global mergetool.keepBackup false
