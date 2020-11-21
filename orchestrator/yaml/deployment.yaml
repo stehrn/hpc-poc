@@ -1,15 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pubsub
+  name: orchestrator
+  namespace: default
 spec:
   selector:
     matchLabels:
-      app: pubsub
+      app: orchestrator
   template:
     metadata:
       labels:
-        app: pubsub
+        app: orchestrator
     spec:
       volumes:
       - name: google-cloud-key
@@ -17,7 +18,7 @@ spec:
           secretName: pubsub-acc-key
       containers:
       - name: subscriber
-        image: gcr.io/hpc-poc/pub:latest
+        image: gcr.io/hpc-poc/orchestrator:latest
         volumeMounts:
         - name: google-cloud-key
           mountPath: /var/secrets/google
@@ -26,5 +27,11 @@ spec:
           value: /var/secrets/google/key.json
         - name: SUBSCRIPTION_NAME
           value: sub-test
+        - name: NAMSPACE
+          value: default  
+        - name: ENGINE_IMAGE
+          value: "gcr.io/hpc-poc/engine:latest"  
+      serviceAccount: job-engine
+      serviceAccountName: job-engine    
 
           

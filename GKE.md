@@ -48,6 +48,12 @@ kubectl get deployment hpc-server -o yaml
 kubectl logs --selector=app=hpc-server --tail 100
 ```
 
+# Destroy resources
+```
+kubectl delete service hpc-server
+
+```
+
 # Appendix
 ## Go specific build
 https://cloud.google.com/cloud-build/docs/building/build-go
