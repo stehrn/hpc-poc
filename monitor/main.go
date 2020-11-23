@@ -28,18 +28,24 @@ type JobList struct {
 	Jobs         []job
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("jobs.tmpl"))
+type jobHandlerContext struct {
+	jobService *k8.JobService
+	template   *template.Template
+}
 
-	namespace := "default"
-	jobService := k8.New(namespace)
-	tmpl.Execute(w, jobs(jobService))
+func (h *jobHandlerContext) handler(w http.ResponseWriter, r *http.Request) {
+	h.template.Execute(w, jobs(h.jobService))
 }
 
 func main() {
 	log.Print("Starting monitor")
 
-	http.HandleFunc("/", indexHandler)
+	namespace := "default"
+	ctx := &jobHandlerContext{
+		jobService: k8.New(namespace),
+		template:   template.Must(template.ParseFiles("jobs.tmpl"))}
+
+	http.HandleFunc("/", ctx.handler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -108,10 +114,8 @@ func status(status batchv1.JobStatus) string {
 	if status.Active > 0 {
 		return "Job is still running"
 
-	} else {
-		if status.Succeeded > 0 {
-			return "Job Successful"
-		}
-		return "Job failed"
+	} else if status.Succeeded > 0 {
+		return "Job Successful"
 	}
+	return "Job failed"
 }

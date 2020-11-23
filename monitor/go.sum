@@ -216,6 +216,8 @@ github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123104343-556ed70920d6 h1:y0nTn
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123104343-556ed70920d6/go.mod h1:2OHMaaMVzuEjo42G1ZbA2fXs9Q/zflAW2ZlQzz3siCg=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123114731-0e6146cf22c9 h1:JL2/qd1k7IVb2J7PaXnNMWejiTZ0jRLmj1+m7120m5w=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123114731-0e6146cf22c9/go.mod h1:2OHMaaMVzuEjo42G1ZbA2fXs9Q/zflAW2ZlQzz3siCg=
+github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123144355-6394942252ae h1:I93Kq2BorayR5/4u6kHu2JHiAws4Rzph99PV7u+aRao=
+github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123144355-6394942252ae/go.mod h1:2OHMaaMVzuEjo42G1ZbA2fXs9Q/zflAW2ZlQzz3siCg=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v0.0.0-20151208002404-e3a8ff8ce365/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
