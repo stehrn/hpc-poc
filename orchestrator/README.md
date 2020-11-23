@@ -96,7 +96,7 @@ gcloud builds submit --tag gcr.io/hpc-poc/orchestrator
 kubectl apply -f yaml/deployment.yaml
 kubectl logs --selector=app=orchestrator --tail 100
 
-gcloud pubsub topics publish test-topic --message="hello nik?"
+gcloud pubsub topics publish test-topic --message="engine job 1"
 
 
 Check engines logs
