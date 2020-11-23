@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+
+	k8 "github.com/stehrn/hpc-poc/kubernetes"
 )
 
 type job struct {
@@ -16,6 +18,7 @@ type job struct {
 	Logs           string
 }
 
+// JobList a list of jobs
 type JobList struct {
 	Namespace    string
 	Subscription string
@@ -24,7 +27,11 @@ type JobList struct {
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles("jobs.tmpl"))
-	tmpl.Execute(w, jobs())
+
+	namespace := "default"
+	jobService := k8.New(namespace)
+
+	tmpl.Execute(w, jobs(jobService))
 }
 
 func main() {
@@ -44,8 +51,9 @@ func main() {
 	}
 }
 
-func jobs() JobList {
+func jobs(jobService *k8.JobService) JobList {
 
+	//jobService.ListJobs()
 	jobs := []job{{
 		Name:           "engine-123",
 		Status:         "Running",

@@ -109,3 +109,6 @@ kubectl logs engine-job-1734219594854205-kjcvc
 
 Argo looks interesting ....
 https://github.com/argoproj/argo/blob/master/workflow/controller/workflowpod.go
+
+
+go get github.com/stehrn/hpc-poc/kubernetes@master

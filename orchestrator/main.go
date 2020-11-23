@@ -5,10 +5,8 @@ import (
 	"log"
 	"os"
 
-	"k8s.io/client-go/kubernetes"
-
 	"cloud.google.com/go/pubsub"
-	"github.com/stehrn/hpc-poc/kubernetes"
+	k8 "github.com/stehrn/hpc-poc/kubernetes"
 )
 
 func main() {
@@ -18,13 +16,13 @@ func main() {
 	engineImage := env("ENGINE_IMAGE")
 
 	log.Printf("Creating jobs client for namespace %s (job will use image: %s)", namespace, engineImage)
-	jobService := kubernetes.New(namespace)
+	jobService := k8.New(namespace)
 
 	subscribe(func(ctx context.Context, m *pubsub.Message) {
 		jobName := "engine-job-" + m.ID
 		payload := string(m.Data)
 		log.Printf("Got message: %s, creating Job: %s", payload, jobName)
-		jobService.createJob(jobName, engineImage, payload)
+		jobService.CreateJob(JobCreate{jobName, engineImage, payload})
 		m.Ack()
 	})
 }
