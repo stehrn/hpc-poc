@@ -5,8 +5,11 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
 	k8 "github.com/stehrn/hpc-poc/kubernetes"
+	batchv1 "k8s.io/api/batch/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type job struct {
@@ -30,7 +33,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	namespace := "default"
 	jobService := k8.New(namespace)
-
 	tmpl.Execute(w, jobs(jobService))
 }
 
@@ -51,18 +53,65 @@ func main() {
 	}
 }
 
+// https://gowalker.org/k8s.io/api/batch/v1#JobList
 func jobs(jobService *k8.JobService) JobList {
-
-	//jobService.ListJobs()
-	jobs := []job{{
-		Name:           "engine-123",
-		Status:         "Running",
-		StartTime:      "123",
-		CompletionTime: "456",
-		Duration:       "99 s",
-		Logs:           "link"}}
+	var jobs []job
+	jobList := jobService.ListJobs()
+	for _, item := range jobList.Items {
+		item := job{
+			Name:           item.Name,
+			Status:         status(item.Status),
+			StartTime:      toString(item.Status.StartTime),
+			CompletionTime: toString(item.Status.CompletionTime),
+			Duration:       duration(item.Status.StartTime, item.Status.CompletionTime),
+			Logs:           "link to logs"}
+		jobs = append(jobs, item)
+	}
 	return JobList{
 		Namespace:    "namesapce",
 		Subscription: "sub",
 		Jobs:         jobs}
+}
+
+func duration(start, end *v1.Time) string {
+	if start.IsZero() || end.IsZero() {
+		return ""
+	}
+	startStr, err := start.MarshalQueryParameter()
+	if err != nil {
+		return ""
+	}
+	endStr, err := end.MarshalQueryParameter()
+	if err != nil {
+		return ""
+	}
+	startTime, err := time.Parse(time.RFC3339, startStr)
+	if err != nil {
+		return ""
+	}
+	endTime, err := time.Parse(time.RFC3339, endStr)
+	if err != nil {
+		return ""
+	}
+	return endTime.Sub(startTime).String()
+}
+
+func toString(time *v1.Time) string {
+	if time.IsZero() {
+		return ""
+	}
+	return time.String()
+}
+
+// ssumes we only have 1 job
+func status(status batchv1.JobStatus) string {
+	if status.Active > 0 {
+		return "Job is still running"
+
+	} else {
+		if status.Succeeded > 0 {
+			return "Job Successful"
+		}
+		return "Job failed"
+	}
 }

@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"log"
+	"os"
 
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
@@ -31,7 +32,12 @@ func New(namspace string) *JobService {
 
 // Client creates a Job Batch client
 func client(namspace string) v1.JobInterface {
-	config, err := clientcmd.BuildConfigFromFlags("", "")
+	return clientset().BatchV1().Jobs(namspace)
+}
+
+func clientset() *kubernetes.Clientset {
+	kubeConfig := os.Getenv("KUBE_CONFIG")
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
 		log.Fatalf("Could not create k8 client: %v", err)
 	}
@@ -39,7 +45,7 @@ func client(namspace string) v1.JobInterface {
 	if err != nil {
 		log.Fatalf("Could not create clientset: %v", err)
 	}
-	return clientset.BatchV1().Jobs(namspace)
+	return clientset
 }
 
 // ListJobs list all jobs
