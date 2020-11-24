@@ -123,7 +123,7 @@ func (c Client) Pod(jobName string) (apiv1.Pod, error) {
 	}
 
 	if len(pods.Items) != 1 {
-		return apiv1.Pod{}, fmt.Errorf("Expected 1 pod, got %d", len(pods.Items))
+		return apiv1.Pod{}, fmt.Errorf("Expected 1 pod but got %d", len(pods.Items))
 	}
 	return pods.Items[0], nil
 }
