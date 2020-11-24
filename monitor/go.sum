@@ -92,6 +92,7 @@ github.com/spf13/afero v1.2.2/go.mod h1:9ZxEEn6pIJ8Rxe320qSDBk6AsU0r9pR7Q4OcevTd
 github.com/spf13/pflag v0.0.0-20170130214245-9ff6c6923cff/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
 github.com/spf13/pflag v1.0.3 h1:zPAT6CGy6wXeQ7NtTnaTerfKOsV6V6F8agHXFiazDkg=
 github.com/spf13/pflag v1.0.3/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
+github.com/stehrn/hpc-poc v0.0.0-20201124141553-884de20f91c8 h1:IDxeCI5426z6hGl3TIhY5SBOVNZrdhaQk8wCpU+wUHU=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123200251-6786cc849623/go.mod h1:2OHMaaMVzuEjo42G1ZbA2fXs9Q/zflAW2ZlQzz3siCg=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201124120429-d2cb1bd7212e h1:kEda4kXyPDpiOYCsizHvP3FoJpQdtagt+RfK1lyMG3Y=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201124120429-d2cb1bd7212e/go.mod h1:cILjp/FRUy0tK0b3o/xnJgiR1o9U+4+Q3NPPbWnLLyA=

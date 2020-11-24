@@ -5,6 +5,9 @@ import (
 	"os"
 )
 
+// A simple engine, well, a bit of code that reads and ENV variable and prints it out.
+// Alternative and more realistic approach would load file(s) from a mouted filesystem
+
 func main() {
 	log.Print("Starting Engine")
 	payload := env("PAYLOAD")

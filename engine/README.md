@@ -9,3 +9,6 @@ gcloud builds submit --tag gcr.io/hpc-poc/engine
 ```
 
 Image is referenced in orchestrator deployment (`ENGINE_IMAGE`)
+
+To test engine:
+TODO

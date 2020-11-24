@@ -14,23 +14,23 @@ gcloud config set compute/zone europe-west2-a
 ## Build container
 Submit build to [cloud-build](https://cloud.google.com/cloud-build), which stores image in the [container-registry](https://cloud.google.com/container-registry)
 
-cd into app folder (e.g. src/github.com/stehrn/gcp/go-app), needs a Dockerfile and go source, and module (`go mod init`)
+cd into app folder (e.g. src/github.com/stehrn/gcp/monitor)
 
 Submit build, giving name and location of container
 ```
-gcloud builds submit --tag gcr.io/hpc-poc/server
+gcloud builds submit --tag gcr.io/hpc-poc/monitor
 ```
 List container (and tags):
 ```
 gcloud container images list --repository=gcr.io/hpc-poc
-gcloud container images list-tags gcr.io/hpc-poc/server
+gcloud container images list-tags gcr.io/hpc-poc/monitor
 ```
 
 See [build-and-deploy](https://cloud.google.com/run/docs/quickstarts/build-and-deploy) quickstart.
 
 ## Deploy to Cloud Run
 ```
-gcloud run deploy --image gcr.io/hpc-poc/server --platform managed
+gcloud run deploy --image gcr.io/hpc-poc/monitor --platform managed
 ```
 
 # Deploy container onto GKE
