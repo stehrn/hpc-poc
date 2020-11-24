@@ -130,6 +130,7 @@ func (c Client) Pod(jobName string) (apiv1.Pod, error) {
 
 // Logs get logs for pod
 func (c Client) Logs(pod apiv1.Pod) (string, error) {
+
 	req := c.clientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &apiv1.PodLogOptions{})
 	podLogs, err := req.Stream()
 	if err != nil {
