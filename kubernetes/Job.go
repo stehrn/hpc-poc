@@ -95,26 +95,33 @@ func (c Client) CreateJob(info JobCreate) (*batchv1.Job, error) {
 
 	result, err := c.jobsClient().Create(job)
 	if err != nil {
-		return nil, errors.Wrap(err, "falied to create job")
+		return nil, errors.Wrapf(err, "falied to create job with %#v", info)
 	}
 
 	log.Printf("Created job %q.\n", result.Name)
 	return result, nil
 }
 
-// Pod from Job
-func (c Client) Pod(job batchv1.Job) (apiv1.Pod, error) {
-	// job-name
+// Job load job from job name
+func (c Client) Job(jobName string) (*batchv1.Job, error) {
+	result, err := c.jobsClient().Get(jobName, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get job: '%s'", jobName)
+	}
+	return result, nil
+}
 
+// Pod load Pod for given job name
+// For now, we just expect 1 pod per job
+func (c Client) Pod(jobName string) (apiv1.Pod, error) {
 	listOptions := metav1.ListOptions{
-		LabelSelector: "job-name=" + job.Name,
+		LabelSelector: "job-name=" + jobName,
 	}
 	pods, err := c.clientSet.CoreV1().Pods(c.namespace).List(listOptions)
 	if err != nil {
-		return apiv1.Pod{}, errors.Wrap(err, "falied to get pod from job")
+		return apiv1.Pod{}, errors.Wrapf(err, "failed to get pod from job: '%s'", jobName)
 	}
 
-	// For now, we just expect 1 pod per job
 	if len(pods.Items) != 0 {
 		return apiv1.Pod{}, fmt.Errorf("Expected 1 pod, got %d", len(pods.Items))
 	}
