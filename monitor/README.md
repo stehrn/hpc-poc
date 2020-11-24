@@ -16,3 +16,5 @@ jobs
 |name|status|start time|completion time|duration|logs|
 
 
+go get github.com/stehrn/hpc-poc/kubernetes@main
+go run main.go 

@@ -1,9 +1,13 @@
 package kubernetes
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"log"
 	"os"
 
+	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,10 +19,10 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// JobService can be used to create and list kubernete Jobs
-type JobService struct {
-	namspace     string
-	jobInterface v1.JobInterface
+// Client can be used to create and list kubernete Jobs
+type Client struct {
+	namespace string
+	clientSet *kubernetes.Clientset
 }
 
 // JobCreate details of job to create
@@ -28,14 +32,14 @@ type JobCreate struct {
 	payLoad string
 }
 
-// New create JobService
-func New(namspace string) *JobService {
-	return &JobService{namspace, client(namspace)}
+// NewClient create Client
+func NewClient(namespace string) *Client {
+	return &Client{namespace, clientset()}
 }
 
-// Client creates a Job Batch client
-func client(namspace string) v1.JobInterface {
-	return clientset().BatchV1().Jobs(namspace)
+// create Job Batch client
+func (c Client) jobsClient() v1.JobInterface {
+	return c.clientSet.BatchV1().Jobs(c.namespace)
 }
 
 func clientset() *kubernetes.Clientset {
@@ -53,22 +57,20 @@ func clientset() *kubernetes.Clientset {
 
 // ListJobs list all jobs
 // calls List(opts metav1.ListOptions) (*v1.JobList, error)
-func (j JobService) ListJobs() *batchv1.JobList {
-	result, err := j.jobInterface.List(metav1.ListOptions{})
+func (c Client) ListJobs() (*batchv1.JobList, error) {
+	result, err := c.jobsClient().List(metav1.ListOptions{})
 	if err != nil {
-		// TODO: handle this better, we clealy dont want to exit here
-		// throw exception intead, or panic?
-		log.Fatalf("Could not create job: %v", err)
+		return nil, errors.Wrap(err, "falied to list jobs")
 	}
-	return result
+	return result, nil
 }
 
 // CreateJob create a kubernetes job
-func (j JobService) CreateJob(info JobCreate) {
+func (c Client) CreateJob(info JobCreate) (*batchv1.Job, error) {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      info.jobName,
-			Namespace: j.namspace,
+			Namespace: c.namespace,
 		},
 		Spec: batchv1.JobSpec{
 			Template: apiv1.PodTemplateSpec{
@@ -91,11 +93,47 @@ func (j JobService) CreateJob(info JobCreate) {
 		},
 	}
 
-	result, err := j.jobInterface.Create(job)
+	result, err := c.jobsClient().Create(job)
 	if err != nil {
-		// TODO: handle this better, we clealy dont want to exit here
-		// throw exception intead, or panic?
-		log.Fatalf("Could not create job: %v", err)
+		return nil, errors.Wrap(err, "falied to create job")
 	}
+
 	log.Printf("Created job %q.\n", result.Name)
+	return result, nil
+}
+
+// Pod from Job
+func (c Client) Pod(job batchv1.Job) (apiv1.Pod, error) {
+	// job-name
+
+	listOptions := metav1.ListOptions{
+		LabelSelector: "job-name=" + job.Name,
+	}
+	pods, err := c.clientSet.CoreV1().Pods(c.namespace).List(listOptions)
+	if err != nil {
+		return apiv1.Pod{}, errors.Wrap(err, "falied to get pod from job")
+	}
+
+	// For now, we just expect 1 pod per job
+	if len(pods.Items) != 0 {
+		return apiv1.Pod{}, fmt.Errorf("Expected 1 pod, got %d", len(pods.Items))
+	}
+	return pods.Items[0], nil
+}
+
+// Logs get logs for pod
+func (c Client) Logs(pod apiv1.Pod) (string, error) {
+	req := c.clientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &apiv1.PodLogOptions{})
+	podLogs, err := req.Stream()
+	if err != nil {
+		return "", errors.Wrap(err, "falied to get job logs: error opening stream")
+	}
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		return "", errors.Wrap(err, "falied to get job logs: error in copy information from podLogs to buf")
+	}
+	return buf.String(), nil
 }

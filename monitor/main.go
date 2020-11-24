@@ -29,12 +29,16 @@ type JobList struct {
 }
 
 type jobHandlerContext struct {
-	jobService *k8.JobService
-	template   *template.Template
+	client   *k8.Client
+	template *template.Template
 }
 
 func (h *jobHandlerContext) handler(w http.ResponseWriter, r *http.Request) {
-	h.template.Execute(w, jobs(h.jobService))
+	jobs, err := jobs(h.client)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	}
+	h.template.Execute(w, jobs)
 }
 
 func main() {
@@ -42,8 +46,8 @@ func main() {
 
 	namespace := "default"
 	ctx := &jobHandlerContext{
-		jobService: k8.New(namespace),
-		template:   template.Must(template.ParseFiles("jobs.tmpl"))}
+		client:   k8.NewClient(namespace),
+		template: template.Must(template.ParseFiles("jobs.tmpl"))}
 
 	http.HandleFunc("/", ctx.handler)
 
@@ -60,9 +64,12 @@ func main() {
 }
 
 // https://gowalker.org/k8s.io/api/batch/v1#JobList
-func jobs(jobService *k8.JobService) JobList {
+func jobs(client *k8.Client) (JobList, error) {
 	var jobs []job
-	jobList := jobService.ListJobs()
+	jobList, err := client.ListJobs()
+	if err != nil {
+		return JobList{}, err
+	}
 	for _, item := range jobList.Items {
 		item := job{
 			Name:           item.Name,
@@ -76,7 +83,7 @@ func jobs(jobService *k8.JobService) JobList {
 	return JobList{
 		Namespace:    "namesapce",
 		Subscription: "sub",
-		Jobs:         jobs}
+		Jobs:         jobs}, nil
 }
 
 func duration(start, end *v1.Time) string {
@@ -113,9 +120,10 @@ func toString(time *v1.Time) string {
 func status(status batchv1.JobStatus) string {
 	if status.Active > 0 {
 		return "Job is still running"
-
 	} else if status.Succeeded > 0 {
 		return "Job Successful"
+	} else if status.Failed > 0 {
+		return "Job Failed"
 	}
-	return "Job failed"
+	return "Job has no status"
 }
