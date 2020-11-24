@@ -15,7 +15,7 @@ gcloud container images list-tags gcr.io/hpc-poc/engine
 ```
 
 # Deploy
-Its not deployed at container into GKE, rather referenced in Job created by orchestrator
+Engine image is not deployed as container into GKE, rather referenced in Job created by orchestrator
 
 
 

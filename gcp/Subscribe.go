@@ -5,9 +5,10 @@ import (
 	"log"
 
 	"cloud.google.com/go/pubsub"
+	"github.com/pkg/errors"
 )
 
-// Subscribe subscribes to givne project/id, passing message into callpack
+// Subscribe subscribes to given project/id, passing message into callpack
 func Subscribe(project string, subscriptionID string, callback func(ctx context.Context, m *pubsub.Message)) error {
 	log.Printf("Subscribing to project: %s, subscriptionID: %s", project, subscriptionID)
 
@@ -16,7 +17,6 @@ func Subscribe(project string, subscriptionID string, callback func(ctx context.
 	if err != nil {
 		return errors.Wrapf(err, "Failed to create pubsub client (project %s)", project)
 	}
-	
 
 	// topic, err := client.
 	// res := topic.Publish(ctx, &pubsub.Message{Data: []byte("payload")})
@@ -26,11 +26,10 @@ func Subscribe(project string, subscriptionID string, callback func(ctx context.
 	if err != nil {
 		return errors.Wrap(err, "Could not receive message")
 	}
-
+	return nil
 }
 
+// Publish publish to topic
 func Publish() {
-
-	
 
 }
