@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"text/template"
 	"time"
 
+	"github.com/pkg/errors"
 	k8 "github.com/stehrn/hpc-poc/kubernetes"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,12 +35,25 @@ type jobHandlerContext struct {
 	template *template.Template
 }
 
-func (h *jobHandlerContext) handler(w http.ResponseWriter, r *http.Request) {
-	jobs, err := jobs(h.client)
+func (ctx *jobHandlerContext) jobs(w http.ResponseWriter, r *http.Request) {
+	jobs, err := jobs(ctx.client)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
+	} else {
+		ctx.template.Execute(w, jobs)
 	}
-	h.template.Execute(w, jobs)
+}
+
+func (ctx *jobHandlerContext) logs(w http.ResponseWriter, r *http.Request) {
+	job := "engine-job-1734219594854205"
+
+	log.Printf("Loading log for job %s", job)
+	logs, err := logs(ctx.client, job)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	} else {
+		fmt.Print(w, logs)
+	}
 }
 
 func main() {
@@ -49,11 +64,12 @@ func main() {
 		client:   k8.NewClient(namespace),
 		template: template.Must(template.ParseFiles("jobs.tmpl"))}
 
-	http.HandleFunc("/", ctx.handler)
+	http.HandleFunc("/job/log", ctx.logs)
+	http.HandleFunc("/jobs", ctx.jobs)
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8081"
 		log.Printf("Defaulting to port %s", port)
 	}
 
@@ -61,6 +77,18 @@ func main() {
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func logs(client *k8.Client, jobName string) (string, error) {
+	pod, err := client.Pod(jobName)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to load logs")
+	}
+	log, err := client.Logs(pod)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to load logs")
+	}
+	return log, nil
 }
 
 // https://gowalker.org/k8s.io/api/batch/v1#JobList

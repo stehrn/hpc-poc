@@ -34,7 +34,7 @@
                   <td>{{ .StartTime }}</td>
                   <td>{{ .CompletionTime }}</td>
                   <td>{{ .Duration }}</td>
-                  <td>{{ .Logs }}</td>
+                  <td><a href="/job/log/{{ .Name }}">Logs</a></td>
             </tr>
             </tbody>
 			{{ end }} 
