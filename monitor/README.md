@@ -5,3 +5,8 @@ Simple web app to view jobs and logs
 ```
 gcloud builds submit --tag gcr.io/hpc-poc/monitor
 ```
+
+# Run locally
+```
+go run main.go
+```

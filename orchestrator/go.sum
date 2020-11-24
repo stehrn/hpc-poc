@@ -197,6 +197,7 @@ github.com/onsi/gomega v0.0.0-20170829124025-dcabb60a477c/go.mod h1:C1qb7wdrVGGV
 github.com/onsi/gomega v1.5.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
 github.com/onsi/gomega v1.7.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
 github.com/peterbourgon/diskv v2.0.1+incompatible/go.mod h1:uqqh8zWWbv1HBMNONnaR/tNboyR3/BZd58JJSHlUSCU=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
@@ -212,6 +213,8 @@ github.com/stehrn/hpc-poc v0.0.0-20201121120434-b0c2667c007c h1:gV+6QVvgeq+RX27T
 github.com/stehrn/hpc-poc v0.0.0-20201123104343-556ed70920d6 h1:TcF4sF55lqvHXvqUGPJVmeoQaetWAelTUGXpE+6xtuE=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123104343-556ed70920d6 h1:y0nTnaIEwHOt8N6MuUcCEgIfc1Fw0E/3bpx4QHg4NVQ=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123104343-556ed70920d6/go.mod h1:2OHMaaMVzuEjo42G1ZbA2fXs9Q/zflAW2ZlQzz3siCg=
+github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201124145636-f34071b2751a h1:K8Or2H0ae6XJwQV8o7kk3BHYAjKVlYzALkUaLp9xTBU=
+github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201124145636-f34071b2751a/go.mod h1:cILjp/FRUy0tK0b3o/xnJgiR1o9U+4+Q3NPPbWnLLyA=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v0.0.0-20151208002404-e3a8ff8ce365/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=

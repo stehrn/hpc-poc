@@ -14,22 +14,22 @@
       </ul> 
     </p>
     
-    <table class="table table-bordered">
-      <thead class="thead-dark">
+    <table class="table table-bordered table-sm">
+      <thead class="thead-light">
       	<tr>
-          <td>Name</td>
-          <td>Status</td>
-          <td>StartTime</td>
-          <td>CompletionTime</td>
-          <td>Duration</td>
-          <td>Logs</td>
+          <th scope="col">Name</td>
+          <th scope="col">Status</td>
+          <th scope="col">StartTime</td>
+          <th scope="col">CompletionTime</td>
+          <th scope="col">Duration</td>
+          <th scope="col">Logs</td>
       </tr>
     </thead>
     <tbody>
       	{{ with .Jobs }}
 			{{ range . }}
       			<tr>
-              		<td>{{ .Name }}</td>
+              		<th scope="row">{{ .Name }}</td>
                   <td>{{ .Status }}</td>
                   <td>{{ .StartTime }}</td>
                   <td>{{ .CompletionTime }}</td>

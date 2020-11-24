@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"text/template"
 	"time"
 
@@ -45,14 +45,18 @@ func (ctx *jobHandlerContext) jobs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctx *jobHandlerContext) logs(w http.ResponseWriter, r *http.Request) {
-	job := "engine-job-1734219594854205"
+	job := strings.TrimPrefix(r.URL.Path, "/job/log/")
+	if job == "" {
+		http.Error(w, "No job sepcified!", 400)
+		return
+	}
 
 	log.Printf("Loading log for job %s", job)
 	logs, err := logs(ctx.client, job)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 	} else {
-		fmt.Print(w, logs)
+		w.Write([]byte(logs))
 	}
 }
 
@@ -64,8 +68,8 @@ func main() {
 		client:   k8.NewClient(namespace),
 		template: template.Must(template.ParseFiles("jobs.tmpl"))}
 
-	http.HandleFunc("/job/log", ctx.logs)
 	http.HandleFunc("/jobs", ctx.jobs)
+	http.HandleFunc("/job/log/", ctx.logs)
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -16,13 +16,16 @@ func main() {
 	engineImage := env("ENGINE_IMAGE")
 
 	log.Printf("Creating jobs client for namespace %s (job will use image: %s)", namespace, engineImage)
-	jobService := k8.New(namespace)
+	client := k8.NewClient(namespace)
 
 	subscribe(func(ctx context.Context, m *pubsub.Message) {
 		jobName := "engine-job-" + m.ID
 		payload := string(m.Data)
 		log.Printf("Got message: %s, creating Job: %s", payload, jobName)
-		jobService.CreateJob(JobCreate{jobName, engineImage, payload})
+		client.CreateJob(k8.JobCreate{
+			jobName:     jobName,
+			engineImage: engineImage,
+			payload:     payload})
 		m.Ack()
 	})
 }

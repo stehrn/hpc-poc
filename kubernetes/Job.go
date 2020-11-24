@@ -27,9 +27,9 @@ type Client struct {
 
 // JobCreate details of job to create
 type JobCreate struct {
-	jobName string
-	image   string
-	payLoad string
+	Name    string
+	Image   string
+	PayLoad string
 }
 
 // NewClient create Client
@@ -69,7 +69,7 @@ func (c Client) ListJobs() (*batchv1.JobList, error) {
 func (c Client) CreateJob(info JobCreate) (*batchv1.Job, error) {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      info.jobName,
+			Name:      info.Name,
 			Namespace: c.namespace,
 		},
 		Spec: batchv1.JobSpec{
@@ -79,11 +79,11 @@ func (c Client) CreateJob(info JobCreate) (*batchv1.Job, error) {
 					Containers: []apiv1.Container{
 						{
 							Name:  "engine",
-							Image: info.image,
+							Image: info.Image,
 							Env: []apiv1.EnvVar{
 								apiv1.EnvVar{
 									Name:  "PAYLOAD",
-									Value: info.payLoad,
+									Value: info.PayLoad,
 								},
 							},
 						},
@@ -123,7 +123,7 @@ func (c Client) Pod(jobName string) (apiv1.Pod, error) {
 	}
 
 	if len(pods.Items) != 1 {
-		return apiv1.Pod{}, fmt.Errorf("Expected 1 pod but got %d", len(pods.Items))
+		return apiv1.Pod{}, fmt.Errorf("Expected 1 pod for job '%s', but got %d", jobName, len(pods.Items))
 	}
 	return pods.Items[0], nil
 }
