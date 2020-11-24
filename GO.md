@@ -11,3 +11,14 @@ This will pull update to kubernetes into `go.mod` (`go.sum` should also be updat
 
 # Run main
 `go run main.go`
+
+# Get valid version of libs
+Get version of k8 
+```
+kubectl version
+```
+Add correct libs to `go.mod` (here, version is '1.16.3'):
+```
+go get k8s.io/client-go@kubernetes-1.16.3
+```
+(run from /Users/db/mygo/src/github.com/stehrn/hpc-poc/pub-sub)

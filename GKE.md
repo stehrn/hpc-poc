@@ -11,7 +11,7 @@ gcloud config set project hpc-poc
 gcloud config set compute/zone europe-west2-a
 ```
 
-## Build container
+## Build containers
 Submit build to [cloud-build](https://cloud.google.com/cloud-build), which stores image in the [container-registry](https://cloud.google.com/container-registry)
 
 cd into app folder (e.g. src/github.com/stehrn/gcp/monitor)

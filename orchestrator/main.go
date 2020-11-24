@@ -22,17 +22,15 @@ func main() {
 		jobName := "engine-job-" + m.ID
 		payload := string(m.Data)
 		log.Printf("Got message: %s, creating Job: %s", payload, jobName)
-		client.CreateJob(k8.JobCreate{
-			jobName:     jobName,
-			engineImage: engineImage,
-			payload:     payload})
+		client.CreateJob(k8.JobCreate{Name: jobName, Image: engineImage, PayLoad: payload})
 		m.Ack()
 	})
 }
 
 func subscribe(callback func(ctx context.Context, m *pubsub.Message)) {
 	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, "hpc-poc")
+	project := "hpc-poc"
+	client, err := pubsub.NewClient(ctx, project)
 	if err != nil {
 		log.Fatalf("Could not create client: %v", err)
 	}
