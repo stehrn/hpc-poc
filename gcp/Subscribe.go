@@ -2,27 +2,37 @@ package gcp
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"cloud.google.com/go/pubsub"
+	ps "cloud.google.com/go/pubsub"
 	"github.com/pkg/errors"
 )
 
-// Subscribe subscribes to given project/id, passing message into callpack
-func Subscribe(project string, subscriptionID string, callback func(ctx context.Context, m *pubsub.Message)) error {
-	log.Printf("Subscribing to project: %s, subscriptionID: %s", project, subscriptionID)
+// Client client
+type Client struct {
+	project        string
+	subscriptionID string
+	topic          string
+	client         *ps.Client
+}
 
+// NewClient create Client
+func NewClient(project, subscriptionID, topic string) (*Client, error) {
 	ctx := context.Background()
 	client, err := pubsub.NewClient(ctx, project)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to create pubsub client (project %s)", project)
+		return nil, errors.Wrapf(err, "Failed to create pubsub client (project %s)", project)
 	}
+	return &Client{project, subscriptionID, topic, client}, nil
+}
 
-	// topic, err := client.
-	// res := topic.Publish(ctx, &pubsub.Message{Data: []byte("payload")})
-
-	sub := client.Subscription(subscriptionID)
-	err = sub.Receive(context.Background(), callback)
+// Subscribe subscribes to given project/id, passing message into callpack
+func (c Client) Subscribe(callback func(ctx context.Context, m *pubsub.Message)) error {
+	log.Printf("Subscribing to project: %s, subscriptionID: %s", c.project, c.subscriptionID)
+	sub := c.client.Subscription(c.subscriptionID)
+	err := sub.Receive(context.Background(), callback)
 	if err != nil {
 		return errors.Wrap(err, "Could not receive message")
 	}
@@ -30,6 +40,14 @@ func Subscribe(project string, subscriptionID string, callback func(ctx context.
 }
 
 // Publish publish to topic
-func Publish() {
-
+func (c Client) Publish(payload []byte) error {
+	topic := c.client.Topic(c.topic)
+	ctx := context.Background()
+	res := topic.Publish(ctx, &pubsub.Message{Data: payload})
+	id, err := res.Get(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Could not publish message")
+	}
+	fmt.Printf("Published message with a message ID: %s", id)
+	return nil
 }

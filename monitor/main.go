@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
@@ -64,9 +63,10 @@ func (ctx *jobHandlerContext) logs(w http.ResponseWriter, r *http.Request) {
 func main() {
 	log.Print("Starting monitor")
 
-	cwd, _ := os.Getwd()
-	jobsTemplate := filepath.Join(cwd, "/jobs.tmpl")
-	log.Printf("Temaplte loading from: %s" + jobsTemplate)
+	// cwd, _ := os.Getwd()
+	// jobsTemplate := filepath.Join(cwd, "jobs.tmpl")
+	jobsTemplate := "/app/jobs.tmpl"
+	log.Printf("Tempalte loading from: %s", jobsTemplate)
 
 	namespace := "default"
 	ctx := &jobHandlerContext{

@@ -35,7 +35,7 @@ gcloud pubsub subscriptions create sub-test --topic=test-topic
 ```
 The name of the subscription is passed into orchestrator container via `SUBSCRIPTION_NAME` env varible in [deployment.yaml](orchestrator/deployment.yaml)
 
-# Create GCP Service Account so orchestrator container can subscribe
+# Create GCP Service Account (so orchestrator container can subscribe)
 Create a service account to allow container running on GKP to subscribe.
 
 see https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform
