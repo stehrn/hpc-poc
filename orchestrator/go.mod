@@ -5,9 +5,10 @@ go 1.13
 require (
 	cloud.google.com/go v0.71.0
 	cloud.google.com/go/pubsub v1.8.3
-	github.com/stehrn/hpc-poc/gcp v0.0.0-20201124232111-f2956c8611da
-	github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201124161001-e2d7b042f2c0
-	k8s.io/api v0.0.0-20191114100352-16d7abae0d2a
-	k8s.io/apimachinery v0.0.0-20191028221656-72ed19daf4bb
+	github.com/stehrn/hpc-poc/gcp v0.0.0-20201125000012-c4f96d1b4c24
+	github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201125000012-c4f96d1b4c24
+	k8s.io/api v0.19.4
+	k8s.io/apimachinery v0.19.4
 	k8s.io/client-go v0.0.0-20191114101535-6c5935290e33
+	sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e // indirect
 )

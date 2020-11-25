@@ -16,7 +16,7 @@ gcloud container images list-tags gcr.io/hpc-poc/orchestrator
 Run:
 ```
 cd orchestrator
-kubectl apply -f /yaml
+kubectl apply -f yaml
 kubectl get deployment orchestrator -o yaml 
 ```
 Note the orchestrator container uses the k8 API to create Jobs, the required role, service account and bindings are also created.

@@ -209,6 +209,7 @@ github.com/spf13/pflag v1.0.3/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnIn
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
 github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
 github.com/stehrn/hpc-poc v0.0.0-20201124141553-884de20f91c8 h1:IDxeCI5426z6hGl3TIhY5SBOVNZrdhaQk8wCpU+wUHU=
+github.com/stehrn/hpc-poc v0.0.0-20201125000012-c4f96d1b4c24 h1:aFwkMTkryj7hvjaYwz6KqN2pKw42xOLgHJYMnHsKIx8=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123104343-556ed70920d6 h1:y0nTnaIEwHOt8N6MuUcCEgIfc1Fw0E/3bpx4QHg4NVQ=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123104343-556ed70920d6/go.mod h1:2OHMaaMVzuEjo42G1ZbA2fXs9Q/zflAW2ZlQzz3siCg=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123200251-6786cc849623/go.mod h1:2OHMaaMVzuEjo42G1ZbA2fXs9Q/zflAW2ZlQzz3siCg=
@@ -218,6 +219,8 @@ github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201124133142-a79a65e6f4c1 h1:ok6U2
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201124133142-a79a65e6f4c1/go.mod h1:cILjp/FRUy0tK0b3o/xnJgiR1o9U+4+Q3NPPbWnLLyA=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201124145636-f34071b2751a h1:K8Or2H0ae6XJwQV8o7kk3BHYAjKVlYzALkUaLp9xTBU=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201124145636-f34071b2751a/go.mod h1:cILjp/FRUy0tK0b3o/xnJgiR1o9U+4+Q3NPPbWnLLyA=
+github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201125000012-c4f96d1b4c24 h1:hspH2szRorGKGPElkI9tmkGueqSZcWYFpWWH3gcpkCo=
+github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201125000012-c4f96d1b4c24/go.mod h1:cILjp/FRUy0tK0b3o/xnJgiR1o9U+4+Q3NPPbWnLLyA=
 github.com/stoewer/go-strcase v1.2.0/go.mod h1:IBiWB2sKIp3wVVQ3Y035++gc+knqhUQag1KpM8ahLw8=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v0.0.0-20151208002404-e3a8ff8ce365/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=

@@ -13,21 +13,25 @@ gcloud container images list-tags gcr.io/hpc-poc/monitor
 ```
 
 # Deploy
+# Deploy
+Run:
 ```
-kubectl create deployment monitor --image=gcr.io/hpc-poc/monitor:latest
+cd monitor
+kubectl apply -f yaml
 kubectl get deployment monitor -o yaml 
 ```
+Note the orchestrator container uses the k8 API to create Jobs, the required role, service account and bindings are also created.
+
 Expose:
 ```
 kubectl expose deployment monitor --type=LoadBalancer --port 8081 --name=monitor
 kubectl get services monitor
-NAME      TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)          AGE
-monitor   LoadBalancer   10.47.250.242   35.189.67.125   8081:32233/TCP   36s
+NAME      TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)          AGE
+monitor   LoadBalancer   10.47.249.184   35.234.146.8   8081:31184/TCP   2m19s
 ```
 Open browswer at: http://<external-ip>:<port>/jobs
 
-(From above exmaple - http://35.189.67.125:32233/jobs)
-
+(From above exmaple - http://35.234.146.8:8081/jobs)
 
 # Monitor
 View logs

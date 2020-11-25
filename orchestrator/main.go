@@ -13,27 +13,37 @@ import (
 func main() {
 	log.Print("Starting orchestrator")
 
-	// k8 settings
-	namespace := env("NAMSPACE")
+	k8Client := k8Client()
 	engineImage := env("ENGINE_IMAGE")
-	// gcp settings
-	project := "hpc-poc"
-	subscriptionID := env("SUBSCRIPTION_NAME")
+	log.Printf("k8 job will use engine image: %s", engineImage)
+	gcpClient := gcpClient()
 
-	log.Printf("Creating jobs client for namespace %s (job will use image: %s)", namespace, engineImage)
-	client := k8.NewClient(namespace)
-
-	err := gcp.Subscribe(project, subscriptionID, func(ctx context.Context, m *pubsub.Message) {
+	err := gcpClient.Subscribe(func(ctx context.Context, m *pubsub.Message) {
 		jobName := "engine-job-" + m.ID
 		payload := string(m.Data)
 		log.Printf("Got message: %s, creating Job: %s", payload, jobName)
-		client.CreateJob(k8.JobCreate{Name: jobName, Image: engineImage, PayLoad: payload})
+		k8Client.CreateJob(k8.JobCreate{Name: jobName, Image: engineImage, PayLoad: payload})
 		m.Ack()
 	})
 
 	if err != nil {
 		panic(err)
 	}
+}
+
+func k8Client() k8.Client {
+	// k8 client
+	namespace := env("NAMSPACE")
+	log.Printf("Creating k8 jobs client for namespace: %s", namespace)
+	return k8.NewClient(namespace)
+}
+
+func gcpClient() gcp.Client {
+	project := "hpc-poc"
+	subscriptionID := env("SUBSCRIPTION_NAME")
+	topic := ""
+	log.Printf("Creating gcp client for project: %s, subscriptionID: %s, topic: %s", project, subscriptionID, topic)
+	return gcp.NewClient(project, subscriptionID, topic)
 }
 
 func env(key string) string {
