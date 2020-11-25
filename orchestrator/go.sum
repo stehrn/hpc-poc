@@ -233,6 +233,8 @@ github.com/stehrn/hpc-poc/gcp v0.0.0-20201124232111-f2956c8611da h1:odtLjm+4J12a
 github.com/stehrn/hpc-poc/gcp v0.0.0-20201124232111-f2956c8611da/go.mod h1:ehu/qBTRhXVXstNlbM9NhrWdg1Kr2cExK5UsDnf0WXs=
 github.com/stehrn/hpc-poc/gcp v0.0.0-20201125000012-c4f96d1b4c24 h1:358CJnyr/7B/dUovtkHWwslIgFcM7QCd2oQ9nm4Ss1U=
 github.com/stehrn/hpc-poc/gcp v0.0.0-20201125000012-c4f96d1b4c24/go.mod h1:ku6RdGummmVbyAytFwlnYiyU5I5IIUnnlesmUogFl6I=
+github.com/stehrn/hpc-poc/gcp v0.0.0-20201125140220-cd2a0f7f0141 h1:sS12Ma4oeX5V8gFmwLYPkBlJoqBZi+mg9h4eAzsuvGI=
+github.com/stehrn/hpc-poc/gcp v0.0.0-20201125140220-cd2a0f7f0141/go.mod h1:s0DkjR71pa9d0aivqB7zouwg1C3yd//BroezwkGax6k=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123104343-556ed70920d6 h1:y0nTnaIEwHOt8N6MuUcCEgIfc1Fw0E/3bpx4QHg4NVQ=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201123104343-556ed70920d6/go.mod h1:2OHMaaMVzuEjo42G1ZbA2fXs9Q/zflAW2ZlQzz3siCg=
 github.com/stehrn/hpc-poc/kubernetes v0.0.0-20201124145636-f34071b2751a h1:K8Or2H0ae6XJwQV8o7kk3BHYAjKVlYzALkUaLp9xTBU=
@@ -603,6 +605,7 @@ k8s.io/apimachinery v0.19.4 h1:+ZoddM7nbzrDCp0T3SWnyxqf8cbWPT2fkZImoyvHUG0=
 k8s.io/apimachinery v0.19.4/go.mod h1:DnPGDnARWFvYa3pMHgSxtbZb7gpzzAZ1pTfaUNDVlmA=
 k8s.io/client-go v0.0.0-20191114101535-6c5935290e33 h1:07mhG/2oEoo3N+sHVOo0L9PJ/qvbk3N5n2dj8IWefnQ=
 k8s.io/client-go v0.0.0-20191114101535-6c5935290e33/go.mod h1:4L/zQOBkEf4pArQJ+CMk1/5xjA30B5oyWv+Bzb44DOw=
+k8s.io/client-go v0.16.13 h1:jp76b20+4h8qZBxferSAVZ6MjBEpw3F309zLmPhngag=
 k8s.io/client-go v0.16.13/go.mod h1:UKvVT4cajC2iN7DCjLgT0KVY/cbY6DGdUCyRiIfws5M=
 k8s.io/client-go v11.0.0+incompatible h1:LBbX2+lOwY9flffWlJM7f1Ct8V2SRNiMRDFeiwnJo9o=
 k8s.io/client-go v11.0.0+incompatible/go.mod h1:7vJpHMYJwNQCWgzmNV+VYUl1zCObLyodBc8nIyt8L5s=
