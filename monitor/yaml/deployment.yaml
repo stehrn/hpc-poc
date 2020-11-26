@@ -16,9 +16,7 @@ spec:
       - name: monitor
         image: gcr.io/hpc-poc/monitor:latest
         env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /var/secrets/google/key.json
+        - name: TEMPLATE_PATH
+          value: /app
       serviceAccount: monitor
-      serviceAccountName: monitor    
-
-          
+      serviceAccountName: monitor

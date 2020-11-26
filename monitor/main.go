@@ -7,12 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
-	"time"
 
-	"github.com/pkg/errors"
 	k8 "github.com/stehrn/hpc-poc/kubernetes"
-	batchv1 "k8s.io/api/batch/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type job struct {
@@ -21,14 +17,12 @@ type job struct {
 	StartTime      string
 	CompletionTime string
 	Duration       string
-	Logs           string
 }
 
 // JobList a list of jobs
 type JobList struct {
-	Namespace    string
-	Subscription string
-	Jobs         []job
+	Namespace string
+	Jobs      []job
 }
 
 type handlerContext struct {
@@ -53,7 +47,7 @@ func (ctx *handlerContext) logs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("Loading log for job %s", job)
-	logs, err := logs(ctx.client, job)
+	logs, err := ctx.client.LogsForJob(job)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 	} else {
@@ -64,9 +58,9 @@ func (ctx *handlerContext) logs(w http.ResponseWriter, r *http.Request) {
 func main() {
 	log.Print("Starting monitor")
 
-	cwd, _ := os.Getwd()
-	jobsTemplate := filepath.Join(cwd, "./jobs.tmpl")
-	log.Printf("Loading template from: %s", jobsTemplate)
+	templatePath := os.Getenv("TEMPLATE_PATH")
+	jobsTemplate := filepath.Join(templatePath, "./jobs.tmpl")
+	log.Printf("Loading template from path: %s", jobsTemplate)
 
 	namespace := "default"
 	ctx := &handlerContext{
@@ -88,18 +82,6 @@ func main() {
 	}
 }
 
-func logs(client *k8.Client, jobName string) (string, error) {
-	pod, err := client.Pod(jobName)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to load logs")
-	}
-	log, err := client.Logs(pod)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to load logs")
-	}
-	return log, nil
-}
-
 // https://gowalker.org/k8s.io/api/batch/v1#JobList
 func jobs(client *k8.Client) (JobList, error) {
 	var jobs []job
@@ -110,57 +92,13 @@ func jobs(client *k8.Client) (JobList, error) {
 	for _, item := range jobList.Items {
 		item := job{
 			Name:           item.Name,
-			Status:         status(item.Status),
-			StartTime:      toString(item.Status.StartTime),
-			CompletionTime: toString(item.Status.CompletionTime),
-			Duration:       duration(item.Status.StartTime, item.Status.CompletionTime),
-			Logs:           "link to logs"}
+			Status:         k8.Status(item.Status),
+			StartTime:      k8.ToString(item.Status.StartTime),
+			CompletionTime: k8.ToString(item.Status.CompletionTime),
+			Duration:       k8.Duration(item.Status.StartTime, item.Status.CompletionTime)}
 		jobs = append(jobs, item)
 	}
 	return JobList{
-		Namespace:    "namesapce",
-		Subscription: "sub",
-		Jobs:         jobs}, nil
-}
-
-func duration(start, end *v1.Time) string {
-	if start.IsZero() || end.IsZero() {
-		return ""
-	}
-	startStr, err := start.MarshalQueryParameter()
-	if err != nil {
-		return ""
-	}
-	endStr, err := end.MarshalQueryParameter()
-	if err != nil {
-		return ""
-	}
-	startTime, err := time.Parse(time.RFC3339, startStr)
-	if err != nil {
-		return ""
-	}
-	endTime, err := time.Parse(time.RFC3339, endStr)
-	if err != nil {
-		return ""
-	}
-	return endTime.Sub(startTime).String()
-}
-
-func toString(time *v1.Time) string {
-	if time.IsZero() {
-		return ""
-	}
-	return time.String()
-}
-
-// ssumes we only have 1 job
-func status(status batchv1.JobStatus) string {
-	if status.Active > 0 {
-		return "Job is still running"
-	} else if status.Succeeded > 0 {
-		return "Job Successful"
-	} else if status.Failed > 0 {
-		return "Job Failed"
-	}
-	return "Job has no status"
+		Namespace: client.Namespace,
+		Jobs:      jobs}, nil
 }

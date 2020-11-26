@@ -2,9 +2,9 @@
 Simple web app to view jobs and logs 
 
 # Build
-Run:
+Run (from base module dir):
 ```
-gcloud builds submit --tag gcr.io/hpc-poc/monitor
+gcloud builds submit --config cloudbuild_monitor.yaml
 ```
 View image:
 ```
@@ -13,25 +13,20 @@ gcloud container images list-tags gcr.io/hpc-poc/monitor
 ```
 
 # Deploy
-# Deploy
 Run:
 ```
-cd monitor
-kubectl apply -f yaml
+kubectl apply -f monitor/yaml
 kubectl get deployment monitor -o yaml 
 ```
 Note the orchestrator container uses the k8 API to create Jobs, the required role, service account and bindings are also created.
 
-Expose:
+Get port:
 ```
-kubectl expose deployment monitor --type=LoadBalancer --port 8081 --name=monitor
-kubectl get services monitor
-NAME      TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)          AGE
-monitor   LoadBalancer   10.47.249.184   35.234.146.8   8081:31184/TCP   2m19s
+kubectl get service monitor
 ```
 Open browswer at: http://<external-ip>:<port>/jobs
 
-(From above exmaple - http://35.234.146.8:8081/jobs)
+(from above example - http://35.234.146.8:8081/jobs)
 
 # Monitor
 View logs
@@ -42,6 +37,7 @@ kubectl logs --selector=app=monitor --tail 100
 # Run locally
 ```
 export KUBE_CONFIG=${HOME}/.kube/config
+cd monitor
 go run main.go
 ```
 open http://localhost:8081/jobs

@@ -7,19 +7,20 @@
   </head>
   <body>
     <p>
-      Monitor for: 
+      Client for: 
       <ul>
         <li>Project: {{ .Gcp.Project }}</li>
-        <li>Subscription: {{ .Gcp.Subscription }}</li>
         <li>Topic: {{ .Gcp.Topic }}</li>
       </ul> 
     </p>
-    
     <div>
-  <form method="POST" action="/client">     
+      <form method="POST" action="/client">     
       <label>Payload</label><input name="payload" type="text" value="" />
       <input type="submit" value="submit" />
-  </form>
-</div>
+      </form>
+    </div>
+    <div>
+    {{ .Message }}
+    </div>
   </body>
 </html>

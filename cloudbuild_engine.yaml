@@ -1,0 +1,12 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', 
+         '--build-arg', 
+         'PACKAGE=engine',
+         '-t', 
+         'gcr.io/hpc-poc/engine', 
+         '.']
+images:
+- 'gcr.io/hpc-poc/engine'
+
+

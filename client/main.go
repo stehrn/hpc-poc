@@ -8,22 +8,17 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/stehrn/hpc-poc/gcp"
+	gcp "github.com/stehrn/hpc-poc/gcp"
 )
 
-type GcpInfo struct {
-	Project      string
-	Subscription string
-	Topic        string
-}
-
+// PageInfo info to render into template
 type PageInfo struct {
-	Gcp     GcpInfo
+	Gcp     gcp.Info
 	Message string
 }
 
 type handlerContext struct {
-	gcpInfo  GcpInfo
+	gcpInfo  gcp.Info
 	client   *gcp.Client
 	template *template.Template
 }
@@ -38,11 +33,11 @@ func (ctx *handlerContext) handle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		payload := []byte(r.FormValue("payload"))
-		err := ctx.client.Publish(payload)
+		id, err := ctx.client.Publish(payload)
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 		} else {
-			ctx.template.Execute(w, &PageInfo{ctx.gcpInfo, "Published payload"})
+			ctx.template.Execute(w, &PageInfo{ctx.gcpInfo, "Published payload, message ID " + id})
 		}
 	}
 }
@@ -50,12 +45,13 @@ func (ctx *handlerContext) handle(w http.ResponseWriter, r *http.Request) {
 func main() {
 	log.Print("Starting client")
 
-	cwd, _ := os.Getwd()
-	clientTemplate := filepath.Join(cwd, "./index.tmpl")
+	templatePath := os.Getenv("TEMPLATE_PATH")
+	clientTemplate := filepath.Join(templatePath, "./index.tmpl")
 	log.Printf("Loading template from: %s", clientTemplate)
 
-	gcpInfo := GcpInfoFromEnvironment()
-	gcpClient, err := gcpClient(gcpInfo)
+	gcpInfo := gcp.InfoFromEnvironment()
+	log.Printf("Creating gcp client for project: %s, subscriptionID: %s, topic: %s", gcpInfo.Project, gcpInfo.Subscription, gcpInfo.Topic)
+	gcpClient, err := gcp.NewClient(gcpInfo)
 	if err != nil {
 		log.Fatalf("Could not create gcp client: %v", err)
 	}
@@ -76,24 +72,4 @@ func main() {
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func gcpClient(gcpInfo GcpInfo) (*gcp.Client, error) {
-	log.Printf("Creating gcp client for project: %s, subscriptionID: %s, topic: %s", gcpInfo.Project, gcpInfo.Subscription, gcpInfo.Topic)
-	return gcp.NewClient(gcpInfo.Project, gcpInfo.Subscription, gcpInfo.Topic)
-}
-
-// GcpInfoFromEnvironment create GcpInfoFromEnvironment from environment variables: PROJECT_NAME, SUBSCRIPTION_NAME, TOPIC_NAME
-func GcpInfoFromEnvironment() GcpInfo {
-	return GcpInfo{Project: "hpc-poc",
-		Subscription: env("SUBSCRIPTION_NAME"),
-		Topic:        env("TOPIC_NAME")}
-}
-
-func env(key string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		log.Fatalf("No '%s' env variable", key)
-	}
-	return value
 }

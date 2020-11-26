@@ -1,9 +1,6 @@
 package kubernetes
 
 import (
-	"bytes"
-	"fmt"
-	"io"
 	"log"
 	"os"
 
@@ -21,12 +18,12 @@ import (
 
 // Client can be used to create and list kubernete Jobs
 type Client struct {
-	namespace string
+	Namespace string
 	clientSet *kubernetes.Clientset
 }
 
-// JobCreate details of job to create
-type JobCreate struct {
+// JobInfo details of job to create
+type JobInfo struct {
 	Name    string
 	Image   string
 	PayLoad string
@@ -39,7 +36,7 @@ func NewClient(namespace string) *Client {
 
 // create Job Batch client
 func (c Client) jobsClient() v1.JobInterface {
-	return c.clientSet.BatchV1().Jobs(c.namespace)
+	return c.clientSet.BatchV1().Jobs(c.Namespace)
 }
 
 func clientset() *kubernetes.Clientset {
@@ -65,12 +62,12 @@ func (c Client) ListJobs() (*batchv1.JobList, error) {
 	return result, nil
 }
 
-// CreateJob create a kubernetes job
-func (c Client) CreateJob(info JobCreate) (*batchv1.Job, error) {
+// CreateJob create a k8 job
+func (c Client) CreateJob(info JobInfo) (*batchv1.Job, error) {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      info.Name,
-			Namespace: c.namespace,
+			Namespace: c.Namespace,
 		},
 		Spec: batchv1.JobSpec{
 			Template: apiv1.PodTemplateSpec{
@@ -111,37 +108,14 @@ func (c Client) Job(jobName string) (*batchv1.Job, error) {
 	return result, nil
 }
 
-// Pod load Pod for given job name
-// For now, we just expect 1 pod per job
-func (c Client) Pod(jobName string) (apiv1.Pod, error) {
-	listOptions := metav1.ListOptions{
-		LabelSelector: "job-name=" + jobName,
+// Status status of job - assumes we only have 1 job
+func Status(status batchv1.JobStatus) string {
+	if status.Active > 0 {
+		return "Job is still running"
+	} else if status.Succeeded > 0 {
+		return "Job Successful"
+	} else if status.Failed > 0 {
+		return "Job Failed"
 	}
-	pods, err := c.clientSet.CoreV1().Pods(c.namespace).List(listOptions)
-	if err != nil {
-		return apiv1.Pod{}, errors.Wrapf(err, "failed to get pod from job: '%s'", jobName)
-	}
-
-	if len(pods.Items) != 1 {
-		return apiv1.Pod{}, fmt.Errorf("Expected 1 pod for job '%s', but got %d", jobName, len(pods.Items))
-	}
-	return pods.Items[0], nil
-}
-
-// Logs get logs for pod
-func (c Client) Logs(pod apiv1.Pod) (string, error) {
-
-	req := c.clientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &apiv1.PodLogOptions{})
-	podLogs, err := req.Stream()
-	if err != nil {
-		return "", errors.Wrap(err, "falied to get job logs: error opening stream")
-	}
-	defer podLogs.Close()
-
-	buf := new(bytes.Buffer)
-	_, err = io.Copy(buf, podLogs)
-	if err != nil {
-		return "", errors.Wrap(err, "falied to get job logs: error in copy information from podLogs to buf")
-	}
-	return buf.String(), nil
+	return "Job has no status"
 }

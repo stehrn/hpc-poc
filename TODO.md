@@ -10,6 +10,7 @@ Events:
 
 
 
+Look into quotas: https://cloud.google.com/kubernetes-engine/quotas
 
 
 require (
@@ -38,3 +39,5 @@ require (
     k8s.io/client-go v0.17.11
 
 )
+
+go install github.com/stehrn/hpc-poc/monitor

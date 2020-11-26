@@ -1,0 +1,12 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', 
+         '--build-arg', 
+         'PACKAGE=monitor',
+         '-t', 
+         'gcr.io/hpc-poc/monitor', 
+         '.']
+images:
+- 'gcr.io/hpc-poc/monitor'
+
+

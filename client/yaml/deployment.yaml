@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      volumes:
+        - name: google-cloud-key
+          secret:
+            secretName: pubsub-acc-key
+      containers:
+      - name: client
+        image: gcr.io/hpc-poc/client:latest
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+        env:
+        - name: PROJECT_NAME
+          value: hpc-poc
+        - name: TOPIC_NAME
+          value: test-topic
+        - name: TEMPLATE_PATH
+          value: /app
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json

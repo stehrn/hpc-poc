@@ -25,6 +25,8 @@ spec:
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /var/secrets/google/key.json
+        - name: PROJECT_NAME
+          value: hpc-poc
         - name: SUBSCRIPTION_NAME
           value: sub-test
         - name: NAMSPACE
