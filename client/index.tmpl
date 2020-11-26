@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Client</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+  </head>
+  <body>
+    <p>
+      Monitor for: 
+      <ul>
+        <li>Project: {{ .Gcp.Project }}</li>
+        <li>Subscription: {{ .Gcp.Subscription }}</li>
+        <li>Topic: {{ .Gcp.Topic }}</li>
+      </ul> 
+    </p>
+    
+    <div>
+  <form method="POST" action="/client">     
+      <label>Payload</label><input name="payload" type="text" value="" />
+      <input type="submit" value="submit" />
+  </form>
+</div>
+  </body>
+</html>

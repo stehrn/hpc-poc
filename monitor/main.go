@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
@@ -30,12 +31,12 @@ type JobList struct {
 	Jobs         []job
 }
 
-type jobHandlerContext struct {
+type handlerContext struct {
 	client   *k8.Client
 	template *template.Template
 }
 
-func (ctx *jobHandlerContext) jobs(w http.ResponseWriter, r *http.Request) {
+func (ctx *handlerContext) jobs(w http.ResponseWriter, r *http.Request) {
 	jobs, err := jobs(ctx.client)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -44,7 +45,7 @@ func (ctx *jobHandlerContext) jobs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (ctx *jobHandlerContext) logs(w http.ResponseWriter, r *http.Request) {
+func (ctx *handlerContext) logs(w http.ResponseWriter, r *http.Request) {
 	job := strings.TrimPrefix(r.URL.Path, "/job/log/")
 	if job == "" {
 		http.Error(w, "No job sepcified!", 400)
@@ -63,13 +64,12 @@ func (ctx *jobHandlerContext) logs(w http.ResponseWriter, r *http.Request) {
 func main() {
 	log.Print("Starting monitor")
 
-	// cwd, _ := os.Getwd()
-	// jobsTemplate := filepath.Join(cwd, "jobs.tmpl")
-	jobsTemplate := "/app/jobs.tmpl"
-	log.Printf("Tempalte loading from: %s", jobsTemplate)
+	cwd, _ := os.Getwd()
+	jobsTemplate := filepath.Join(cwd, "./jobs.tmpl")
+	log.Printf("Loading template from: %s", jobsTemplate)
 
 	namespace := "default"
-	ctx := &jobHandlerContext{
+	ctx := &handlerContext{
 		client:   k8.NewClient(namespace),
 		template: template.Must(template.ParseFiles(jobsTemplate))}
 

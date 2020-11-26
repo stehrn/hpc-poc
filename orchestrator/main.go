@@ -16,9 +16,12 @@ func main() {
 	k8Client := k8Client()
 	engineImage := env("ENGINE_IMAGE")
 	log.Printf("k8 job will use engine image: %s", engineImage)
-	gcpClient := gcpClient()
+	gcpClient, err := gcpClient()
+	if err != nil {
+		log.Fatalf("Could not create gcp client: %v", err)
+	}
 
-	err := gcpClient.Subscribe(func(ctx context.Context, m *pubsub.Message) {
+	err = gcpClient.Subscribe(func(ctx context.Context, m *pubsub.Message) {
 		jobName := "engine-job-" + m.ID
 		payload := string(m.Data)
 		log.Printf("Got message: %s, creating Job: %s", payload, jobName)
@@ -31,14 +34,14 @@ func main() {
 	}
 }
 
-func k8Client() k8.Client {
+func k8Client() *k8.Client {
 	// k8 client
 	namespace := env("NAMSPACE")
 	log.Printf("Creating k8 jobs client for namespace: %s", namespace)
 	return k8.NewClient(namespace)
 }
 
-func gcpClient() gcp.Client {
+func gcpClient() (*gcp.Client, error) {
 	project := "hpc-poc"
 	subscriptionID := env("SUBSCRIPTION_NAME")
 	topic := ""

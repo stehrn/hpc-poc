@@ -44,3 +44,4 @@ kubectl logs --selector=app=monitor --tail 100
 export KUBE_CONFIG=${HOME}/.kube/config
 go run main.go
 ```
+open http://localhost:8081/jobs

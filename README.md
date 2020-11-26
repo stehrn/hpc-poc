@@ -47,9 +47,15 @@ gcloud iam service-accounts create gke-sub-acc@hpc-poc.iam.gserviceaccount.com -
 ```
 ## Add `pubsub.subscriber` role
 ```
-gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/pubsub.subscriber
+gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/pubsub.subscriber 
+gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/pubsub.publisher
 ```
-## Get JSON key and create k8 secret
+List roles:
+```
+gcloud projects get-iam-policy hpc-poc --flatten="bindings[].members" --format='table(bindings.role)' --filter="bindings.members:gke-sub-acc@hpc-poc.iam.gserviceaccount.com"
+```
+
+## Get GCP JSON key and create k8 secret
 The key is injected into container env variable `GOOGLE_APPLICATION_CREDENTIALS` 
 
 ```
