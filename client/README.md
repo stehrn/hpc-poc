@@ -5,6 +5,9 @@ Simple web app to submit jobs
 Run (from base module dir):
 ```
 gcloud builds submit --config cloudbuild_client.yaml
+
+gcloud builds submit --build-arg PACKAGE=client --tag gcr.io/hpc-poc/client
+
 ```
 View image:
 ```
@@ -27,10 +30,17 @@ Open browswer at: http://<external-ip>:<port>/client
 (from above example - http://35.234.146.8:8082/client)
 
 # Monitor
-View logs
+View logs:
 ```
 kubectl logs --selector=app=client --tail 100
 ``` 
+
+# Delete
+Run:
+```
+kubectl delete pods,services -l app=client
+kubectl delete deployment client
+```
 
 # Run locally
 ```

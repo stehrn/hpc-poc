@@ -16,11 +16,13 @@
     <table class="table table-bordered table-sm">
       <thead class="thead-light">
       	<tr>
-          <th scope="col">Name</td>
-          <th scope="col">Status</td>
-          <th scope="col">StartTime</td>
-          <th scope="col">CompletionTime</td>
-          <th scope="col">Duration</td>
+          <th scope="col">Job Name</td>
+          <th scope="col">Job Status</td>
+          <th scope="col">Job Start Time</td>
+          <th scope="col">Job Completion Time</td>
+          <th scope="col">Job Duration</td>
+          <th scope="col">Pod Status</td>
+          <th scope="col">Pod Last State (Message)</td>
           <th scope="col">Logs</td>
       </tr>
     </thead>
@@ -33,6 +35,8 @@
                   <td>{{ .StartTime }}</td>
                   <td>{{ .CompletionTime }}</td>
                   <td>{{ .Duration }}</td>
+                  <td>{{ .Pod.Status }}</td>
+                  <td>{{ .Pod.LastState.Type }} ({{ .Pod.LastState.Reason }} {{ .Pod.LastState.Message }})</td>
                   <td><a href="/job/log/{{ .Name }}">Logs</a></td>
             </tr>
             </tbody>

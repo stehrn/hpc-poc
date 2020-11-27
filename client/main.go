@@ -62,7 +62,7 @@ func main() {
 
 	http.HandleFunc("/client", ctx.handle)
 
-	port := os.Getenv("CLIENT_PORT")
+	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8082"
 		log.Printf("Defaulting to port %s", port)

@@ -5,7 +5,9 @@ steps:
          'PACKAGE=client',
          '-t', 
          'gcr.io/hpc-poc/client', 
-         '.']
+         '.',
+        '--file', 
+        'DockerFileForWeb']
 images:
 - 'gcr.io/hpc-poc/client'
 

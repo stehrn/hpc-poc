@@ -8,21 +8,30 @@ import (
 	"strings"
 	"text/template"
 
+	apiv1 "k8s.io/api/core/v1"
+
 	k8 "github.com/stehrn/hpc-poc/kubernetes"
 )
 
-type job struct {
+type podSummary struct {
+	Name      string
+	Status    string
+	LastState apiv1.PodCondition
+}
+
+type jobSummary struct {
 	Name           string
 	Status         string
 	StartTime      string
 	CompletionTime string
 	Duration       string
+	Pod            podSummary
 }
 
 // JobList a list of jobs
 type JobList struct {
 	Namespace string
-	Jobs      []job
+	Jobs      []jobSummary
 }
 
 type handlerContext struct {
@@ -62,9 +71,12 @@ func main() {
 	jobsTemplate := filepath.Join(templatePath, "./jobs.tmpl")
 	log.Printf("Loading template from path: %s", jobsTemplate)
 
-	namespace := "default"
+	client, err := k8.NewClientFromEnvironment()
+	if err != nil {
+		log.Fatal(err)
+	}
 	ctx := &handlerContext{
-		client:   k8.NewClient(namespace),
+		client:   client,
 		template: template.Must(template.ParseFiles(jobsTemplate))}
 
 	http.HandleFunc("/jobs", ctx.jobs)
@@ -76,7 +88,7 @@ func main() {
 		log.Printf("Defaulting to port %s", port)
 	}
 
-	log.Printf("Service Listening on port %s", port)
+	log.Printf("Monitor service Listening on port %s", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
@@ -84,21 +96,39 @@ func main() {
 
 // https://gowalker.org/k8s.io/api/batch/v1#JobList
 func jobs(client *k8.Client) (JobList, error) {
-	var jobs []job
+	var jobs []jobSummary
 	jobList, err := client.ListJobs()
 	if err != nil {
 		return JobList{}, err
 	}
 	for _, item := range jobList.Items {
-		item := job{
+		item := jobSummary{
 			Name:           item.Name,
 			Status:         k8.Status(item.Status),
 			StartTime:      k8.ToString(item.Status.StartTime),
 			CompletionTime: k8.ToString(item.Status.CompletionTime),
-			Duration:       k8.Duration(item.Status.StartTime, item.Status.CompletionTime)}
+			Duration:       k8.Duration(item.Status.StartTime, item.Status.CompletionTime),
+			Pod:            getPodSummary(client, item.Name)}
 		jobs = append(jobs, item)
 	}
 	return JobList{
 		Namespace: client.Namespace,
 		Jobs:      jobs}, nil
+}
+
+// Pod Status
+// Last Pod State (type/reason/message)
+func getPodSummary(client *k8.Client, jobName string) podSummary {
+	pod, _ := client.Pod(jobName)
+	podStatus := pod.Status
+	conditions := podStatus.Conditions
+	var lastState apiv1.PodCondition
+	lastState = apiv1.PodCondition{}
+	if len(conditions) != 0 {
+		lastState = conditions[0]
+	}
+	return podSummary{
+		Name:      pod.Name,
+		Status:    string(podStatus.Phase),
+		LastState: lastState}
 }

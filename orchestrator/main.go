@@ -5,19 +5,25 @@ import (
 	"log"
 
 	"cloud.google.com/go/pubsub"
+	gcp "github.com/stehrn/hpc-poc/gcp"
+	"github.com/stehrn/hpc-poc/internal/utils"
 	k8 "github.com/stehrn/hpc-poc/kubernetes"
 )
 
 func main() {
 	log.Print("Starting orchestrator")
 
-	k8Client := k8Client()
-	engineImage := utils.Env("ENGINE_IMAGE")
-	log.Printf("k8 job will use engine image: %s", engineImage)
-	gcpClient, err := gcpClient()
+	k8Client, err := k8.NewClientFromEnvironment()
+	if err != nil {
+		log.Fatalf("Could not create k8 client: %v", err)
+	}
+	gcpClient, err := gcp.NewClientFromEnvironment()
 	if err != nil {
 		log.Fatalf("Could not create gcp client: %v", err)
 	}
+
+	engineImage := utils.Env("ENGINE_IMAGE")
+	log.Printf("k8 job will use engine image: %s", engineImage)
 
 	err = gcpClient.Subscribe(func(ctx context.Context, m *pubsub.Message) {
 		jobName := "engine-job-" + m.ID
@@ -30,10 +36,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func k8Client() *k8.Client {
-	namespace := utils.Env("NAMSPACE")
-	log.Printf("Creating k8 jobs client for namespace: %s", namespace)
-	return k8.NewClient(namespace)
 }

@@ -34,6 +34,13 @@ View logs
 kubectl logs --selector=app=monitor --tail 100
 ``` 
 
+# Delete
+Run:
+```
+kubectl delete pods,services -l app=monitor
+kubectl delete deployment monitor
+```
+
 # Run locally
 ```
 export KUBE_CONFIG=${HOME}/.kube/config

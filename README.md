@@ -1,15 +1,19 @@
 
 # POC of work queue
 
-* Init gcloud
-* Create [GKE](https://cloud.google.com/kubernetes-engine/docs/quickstart) 
-* Create (test) topic and subscription
-* Create GCP Service Account (so orchestrator container can subscribe to GCP)
-* Build (with [Cloud Build](https://cloud.google.com/cloud-build)) and deployment  
-  * Build and deploy orchestrator container into GKE 
-  * Build engine container
-  * Build and deploy monitor container into GKE 
-* Testing
+* Creation and set-up of GCP resources
+  * Init gcloud
+  * Create [GKE](https://cloud.google.com/kubernetes-engine/docs/quickstart) 
+  * Create (test) topic and subscription
+  * Create GCP Service Account (so orchestrator container can subscribe to GCP)
+* Container build (with [Cloud Build](https://cloud.google.com/cloud-build)) and GKE deploymentmentof:  
+  * Orchestrator
+  * Engine (no deploy)
+  * Client 
+  * Monitor
+* Test
+  * Submit jobs
+  * View activity
 
 # Init gcloud
 ```
@@ -64,26 +68,35 @@ kubectl create secret generic pubsub-acc-key --from-file=key.json=/Users/db/key.
 ```
 ...where path to download is location of key file.
 
-# Build containers
+# Build and deploy containers
 Submit build to [cloud-build](https://cloud.google.com/cloud-build), which stores image in the [container-registry](https://cloud.google.com/container-registry); see [build-and-deploy](https://cloud.google.com/run/docs/quickstarts/build-and-deploy) quickstart.
 
-## Build and deploy orchestrator container into GKE 
+## Orchestrator
 see [orchestrator/README.md](orchestrator/README.md)
 
-## Build engine container
+## Engine
 see [engine/README.md](engine/README.md)
 
-## Build and deploy monitor container into GKE 
+## Client
+see [client/README.md](client/README.md)
+
+## Monitor
 see [monitor/README.md](monitor/README.md)
 
 # Test
+## Submit jobs
+Use [web client](client/README.md) or gcloud shell:
 ```
 gcloud pubsub topics publish test-topic --message="engine payload 1"
-kubectl logs --selector=app=orchestrator --tail 100
 ```
 
-Use monitor to view job/engine logs, altenratively, view workload in [console](https://console.cloud.google.com/kubernetes/workload/)
-
+## View activity
+* Use [web monitor](monitor/README.md) to view job/engine logs
+* View workload in [console](https://console.cloud.google.com/kubernetes/workload/)
+* Use `kubectl`:
+```
+kubectl logs --selector=app=orchestrator --tail 100
+```
 
 # Articles 
 * https://blog.meain.io/2019/accessing-kubernetes-api-from-pod/

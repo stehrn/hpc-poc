@@ -2,55 +2,15 @@ package kubernetes
 
 import (
 	"log"
-	"os"
 
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	v1 "k8s.io/client-go/kubernetes/typed/batch/v1"
 
 	// To support connecting to GKE from outside of cluster (if KUBE_CONFIG used)
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	"k8s.io/client-go/tools/clientcmd"
 )
-
-// Client can be used to create and list kubernete Jobs
-type Client struct {
-	Namespace string
-	clientSet *kubernetes.Clientset
-}
-
-// JobInfo details of job to create
-type JobInfo struct {
-	Name    string
-	Image   string
-	PayLoad string
-}
-
-// NewClient create Client
-func NewClient(namespace string) *Client {
-	return &Client{namespace, clientset()}
-}
-
-// create Job Batch client
-func (c Client) jobsClient() v1.JobInterface {
-	return c.clientSet.BatchV1().Jobs(c.Namespace)
-}
-
-func clientset() *kubernetes.Clientset {
-	kubeConfig := os.Getenv("KUBE_CONFIG")
-	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
-	if err != nil {
-		log.Fatalf("Could not create k8 client: %v", err)
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		log.Fatalf("Could not create clientset: %v", err)
-	}
-	return clientset
-}
 
 // ListJobs list all jobs
 // calls List(opts metav1.ListOptions) (*v1.JobList, error)
@@ -110,12 +70,13 @@ func (c Client) Job(jobName string) (*batchv1.Job, error) {
 
 // Status status of job - assumes we only have 1 job
 func Status(status batchv1.JobStatus) string {
+	log.Printf("Status is: %v", status)
 	if status.Active > 0 {
-		return "Job is still running"
+		return "Running"
 	} else if status.Succeeded > 0 {
-		return "Job Successful"
+		return "Successful"
 	} else if status.Failed > 0 {
-		return "Job Failed"
+		return "Failed"
 	}
-	return "Job has no status"
+	return "Unkonwn"
 }
