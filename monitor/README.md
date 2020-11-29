@@ -43,6 +43,7 @@ kubectl delete deployment monitor
 
 # Run locally
 ```
+export NAMSPACE=default
 export KUBE_CONFIG=${HOME}/.kube/config
 cd monitor
 go run main.go

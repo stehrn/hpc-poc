@@ -25,9 +25,15 @@ spec:
         env:
         - name: PROJECT_NAME
           value: hpc-poc
-        - name: TOPIC_NAME
-          value: test-topic
-        - name: TEMPLATE_PATH
-          value: /app
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /var/secrets/google/key.json
+        - name: TOPIC_NAME
+          value: test-topic
+        - name: BUCKET_NAME
+          value: stehrn_hpc-poc
+        - name: TEMPLATE_PATH
+          value: /app
+        
+
+
+

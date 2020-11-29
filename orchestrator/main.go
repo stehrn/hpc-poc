@@ -6,6 +6,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	messaging "github.com/stehrn/hpc-poc/gcp/pubsub"
+	"github.com/stehrn/hpc-poc/gcp/storage"
 	"github.com/stehrn/hpc-poc/internal/utils"
 	k8 "github.com/stehrn/hpc-poc/kubernetes"
 )
@@ -27,9 +28,12 @@ func main() {
 
 	err = pubsubClient.Subscribe(func(ctx context.Context, m *pubsub.Message) {
 		jobName := "engine-job-" + m.ID
-		location := string(m.Data)
-		log.Printf("Got message: %s, creating Job: %s", object, jobName)
-		k8Client.CreateJob(k8.JobInfo{Name: jobName, Image: engineImage, Location: location})
+		location, err := storage.ToLocation(m.Data)
+		if err != nil {
+			log.Fatalf("Could not get location from message data: %v", err)
+		}
+		log.Printf("Creating Job %s to processes data at %s", jobName, location)
+		k8Client.CreateJob(k8.JobInfo{jobName, engineImage, location})
 		m.Ack()
 	})
 

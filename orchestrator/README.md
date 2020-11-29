@@ -4,7 +4,7 @@ Subscribes to configured subscription, when message recieved, create k8 job with
 # Build (orchestrator)
 Run:
 ```
-gcloud builds submit --tag gcr.io/hpc-poc/orchestrator
+gcloud builds submit --config=cloudbuild.yaml --substitutions=_PACKAGE="orchestrator" .
 ```
 View image:
 ```
@@ -15,8 +15,7 @@ gcloud container images list-tags gcr.io/hpc-poc/orchestrator
 # Deploy
 Run:
 ```
-cd orchestrator
-kubectl apply -f yaml
+kubectl apply -f orchestrator/yaml
 kubectl get deployment orchestrator -o yaml 
 ```
 Note the orchestrator container uses the k8 API to create Jobs, the required role, service account and bindings are also created.

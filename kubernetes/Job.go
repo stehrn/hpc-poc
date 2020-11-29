@@ -62,11 +62,11 @@ func (c Client) CreateJob(info JobInfo) (*batchv1.Job, error) {
 								},
 								{
 									Name:  "BUCKET_NAME",
-									Value: info.Location.Bucket,
+									Value: info.Bucket,
 								},
 								{
 									Name:  "OBJECT_NAME",
-									Value: info.Location.Object,
+									Value: info.Object,
 								},
 							},
 						},

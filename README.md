@@ -57,7 +57,10 @@ Set up following:
 
 * Orchestrator:
   * subscribe [pubsub.subscriber ]
+
+* Engine:
   * read storage objects [storage.objectViewer]
+  * delete storage objects [storage.objects.delete]
 
 ```
 // create service sccount 

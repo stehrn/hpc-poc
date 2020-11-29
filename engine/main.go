@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/stehrn/hpc-poc/gcp/storage"
@@ -18,7 +17,7 @@ func main() {
 		log.Fatalf("Failed to download object, error: %v", err)
 	}
 
-	fmt.Printf("Loaded data: %v", data)
+	log.Printf("Loaded data: %v", string(data))
 
 	log.Printf("Deleting cloud storage data at %v", location)
 	err = storage.Delete(location)

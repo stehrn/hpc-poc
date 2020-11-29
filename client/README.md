@@ -42,10 +42,10 @@ kubectl delete deployment client
 
 # Run locally
 ```
-export GOOGLE_APPLICATION_CREDENTIALS=<path>key.json (see main README and 'Get GCP JSON key...')
 export PROJECT_NAME=hpc-poc
-export TOPIC_NAME=test-topic
+export GOOGLE_APPLICATION_CREDENTIALS=<path>key.json (see main README and 'Get GCP JSON key...')
 export BUCKET_NAME=stehrn_hpc-poc
+export TOPIC_NAME=test-topic
 go run main.go
 ```
 open http://localhost:8082/client
