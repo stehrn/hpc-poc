@@ -21,22 +21,17 @@ type Client struct {
 
 // JobInfo details of job to create
 type JobInfo struct {
-	Name    string
-	Image   string
-	PayLoad string
+	Name     string
+	Image    string
+	Location string
 }
 
-// NewClientFromEnvironment create Client
-func NewClientFromEnvironment() (*Client, error) {
+// NewClient create Client
+func NewClient() (*Client, error) {
 	namespace := os.Getenv("NAMSPACE")
 	if namespace == "" {
 		return nil, errors.New("Namspace required")
 	}
-	return NewClient(namespace)
-}
-
-// NewClient create Client
-func NewClient(namespace string) (*Client, error) {
 	log.Printf("Creating k8 client for namespace: %s", namespace)
 	clientset, err := clientset()
 	if err != nil {

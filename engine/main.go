@@ -1,23 +1,28 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"os"
+
+	"github.com/stehrn/hpc-poc/gcp/storage"
 )
 
-// A simple engine, well, a bit of code that reads and ENV variable and prints it out.
-// Alternative and more realistic approach would load file(s) from a mouted filesystem
-
+// Simple engine that download a cloud storage object based on info in env, prints contents out, and exits
 func main() {
 	log.Print("Starting Engine")
-	payload := env("PAYLOAD")
-	log.Printf("Engine got payload %s", payload)
-}
 
-func env(key string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		log.Fatalf("No '%s' env variable", key)
+	location := storage.LocationFromEnvironment()
+	log.Printf("Loading data from cloud storage %v", location)
+	data, err := storage.Download(location)
+	if err != nil {
+		log.Fatalf("Failed to download object, error: %v", err)
 	}
-	return value
+
+	fmt.Printf("Loaded data: %v", data)
+
+	log.Printf("Deleting cloud storage data at %v", location)
+	err = storage.Delete(location)
+	if err != nil {
+		log.Fatalf("Failed to delete object, error: %v", err)
+	}
 }

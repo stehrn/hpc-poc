@@ -39,7 +39,6 @@ RUN echo "Running runtime build for package ${PACKAGE}"
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /app/server /app/server
-COPY --from=builder /app/${PACKAGE}/*.tmpl /app
 
 # Run the service on container startup.
 CMD ["/app/server"]

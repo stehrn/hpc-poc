@@ -9,6 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	// To support connecting to GKE from outside of cluster (if KUBE_CONFIG used)
+
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
@@ -33,14 +34,39 @@ func (c Client) CreateJob(info JobInfo) (*batchv1.Job, error) {
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
 					RestartPolicy: "OnFailure",
+					Volumes: []apiv1.Volume{
+						{
+							Name: "google-cloud-key",
+							VolumeSource: apiv1.VolumeSource{
+								Secret: &apiv1.SecretVolumeSource{
+									SecretName: "pubsub-acc-key",
+								},
+							},
+						},
+					},
 					Containers: []apiv1.Container{
 						{
 							Name:  "engine",
 							Image: info.Image,
+							VolumeMounts: []apiv1.VolumeMount{
+								{
+									Name:      "google-cloud-key",
+									MountPath: "/var/secrets/google",
+									ReadOnly:  true,
+								},
+							},
 							Env: []apiv1.EnvVar{
-								apiv1.EnvVar{
-									Name:  "PAYLOAD",
-									Value: info.PayLoad,
+								{
+									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+									Value: "/var/secrets/google/key.json",
+								},
+								{
+									Name:  "BUCKET_NAME",
+									Value: info.Location.Bucket,
+								},
+								{
+									Name:  "OBJECT_NAME",
+									Value: info.Location.Object,
 								},
 							},
 						},
@@ -70,7 +96,6 @@ func (c Client) Job(jobName string) (*batchv1.Job, error) {
 
 // Status status of job - assumes we only have 1 job
 func Status(status batchv1.JobStatus) string {
-	log.Printf("Status is: %v", status)
 	if status.Active > 0 {
 		return "Running"
 	} else if status.Succeeded > 0 {

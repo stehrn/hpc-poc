@@ -4,9 +4,7 @@ Simple web app to submit jobs
 # Build
 Run (from base module dir):
 ```
-gcloud builds submit --config cloudbuild_client.yaml
-
-gcloud builds submit --build-arg PACKAGE=client --tag gcr.io/hpc-poc/client
+gcloud builds submit --config=cloudbuild.yaml --substitutions=_PACKAGE="client",_DOCKERFILE="DockerfileForWeb" .
 
 ```
 View image:
@@ -47,6 +45,7 @@ kubectl delete deployment client
 export GOOGLE_APPLICATION_CREDENTIALS=<path>key.json (see main README and 'Get GCP JSON key...')
 export PROJECT_NAME=hpc-poc
 export TOPIC_NAME=test-topic
+export BUCKET_NAME=stehrn_hpc-poc
 go run main.go
 ```
 open http://localhost:8082/client

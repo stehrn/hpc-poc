@@ -4,7 +4,7 @@ Simple web app to view jobs and logs
 # Build
 Run (from base module dir):
 ```
-gcloud builds submit --config cloudbuild_monitor.yaml
+gcloud builds submit --config=cloudbuild.yaml --substitutions=_PACKAGE="monitor",_DOCKERFILE="DockerfileForWeb" .
 ```
 View image:
 ```

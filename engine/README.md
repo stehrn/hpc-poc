@@ -1,12 +1,19 @@
 # Engine container
-A simple engine, it actually just reads value of `PAYLOAD` env variable, prints it out, and exits.
+A simple engine that downloads an object from GCP cloud storage bucket, prints it out, 
+deletes the object from cloud storage, and exits.
 
 Image is referenced in orchestrator deployment (`ENGINE_IMAGE`)
+
+The engine itself requires the following env variables:
+* `BUCKET_NAME` 
+* `OBJECT_NAME`
+* `GOOGLE_APPLICATION_CREDENTIALS` to enable download payload from cloud storage
 
 # Build
 Run:
 ```
-gcloud builds submit --tag gcr.io/hpc-poc/engine
+gcloud builds submit --config=cloudbuild.yaml --substitutions=_PACKAGE="engine" .
+
 ```
 View image:
 ```

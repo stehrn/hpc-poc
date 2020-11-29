@@ -1,4 +1,4 @@
-package gcp
+package pubsub
 
 import (
 	"context"
@@ -10,10 +10,10 @@ import (
 
 // Publish publish to topic
 func (c Client) Publish(payload []byte) (string, error) {
-	if c.info.Topic == "" {
+	if c.Topic == "" {
 		return "", errors.New("Topic required")
 	}
-	topic := c.client.Topic(c.info.Topic)
+	topic := c.client.Topic(c.Topic)
 	ctx := context.Background()
 	res := topic.Publish(ctx, &pubsub.Message{Data: payload})
 	id, err := res.Get(ctx)

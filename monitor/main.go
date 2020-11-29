@@ -71,7 +71,7 @@ func main() {
 	jobsTemplate := filepath.Join(templatePath, "./jobs.tmpl")
 	log.Printf("Loading template from path: %s", jobsTemplate)
 
-	client, err := k8.NewClientFromEnvironment()
+	client, err := k8.NewClient()
 	if err != nil {
 		log.Fatal(err)
 	}

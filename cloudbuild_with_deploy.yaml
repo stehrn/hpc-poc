@@ -1,0 +1,25 @@
+steps:
+# build the container image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', 
+         '--build-arg', 
+         'PACKAGE=${_PACKAGE}',
+         '-t', 
+         'gcr.io/hpc-poc/${_PACKAGE}', 
+         '.',
+        '--file', 
+        '${_DOCKERFILE}']
+substitutions:
+    _DOCKERFILE: Dockerfile # default value        
+images:
+- 'gcr.io/hpc-poc/${_PACKAGE}'
+# deploy container image to GKE
+- name: "gcr.io/cloud-builders/gke-deploy"
+  args:
+  - run
+  - --filename=kubernetes-config-file
+  - --image=gcr.io/hpc-poc/${_PACKAGE}
+  - --location=${_CLOUDSDK_COMPUTE_ZONE}
+  - --cluster=${_CLOUDSDK_CONTAINER_CLUSTER}
+
+

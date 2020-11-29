@@ -23,17 +23,15 @@ spec:
         - name: google-cloud-key
           mountPath: /var/secrets/google
         env:
+        - name: NAMSPACE
+          value: default  
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /var/secrets/google/key.json
         - name: PROJECT_NAME
           value: hpc-poc
         - name: SUBSCRIPTION_NAME
           value: sub-test
-        - name: NAMSPACE
-          value: default  
         - name: ENGINE_IMAGE
           value: "gcr.io/hpc-poc/engine:latest"  
       serviceAccount: job-engine
-      serviceAccountName: job-engine    
-
-          
+      serviceAccountName: job-engine
