@@ -1,17 +1,15 @@
 steps:
 # build the container image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', 
-         '--build-arg', 
-         'PACKAGE=${_PACKAGE}',
-         '-t', 
-         'gcr.io/hpc-poc/${_PACKAGE}', 
-         '.',
-        '--file', 
-        '${_DOCKERFILE}']
+  id: 'Build'
+  args:
+  - build
+  - --build-arg=PACKAGE=${_PACKAGE}
+  - -t=gcr.io/hpc-poc/${_PACKAGE}
+  - .
+  - --file=${_DOCKERFILE}
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push'
+  args: ["push", "gcr.io/hpc-poc/${_PACKAGE}"]  
 substitutions:
     _DOCKERFILE: Dockerfile # default value        
-images:
-- 'gcr.io/hpc-poc/${_PACKAGE}'
-
-

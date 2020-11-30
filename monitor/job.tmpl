@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Monitor</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+  </head>
+  <body>
+    <p>
+      <ul>
+       <li>Name: {{ .Job.Name }}</li>
+       <li>ClusterName: {{ .Job.ClusterName }}</li>
+       <li>Namespace: {{ .Job.Namespace }}</li>
+       <li>Created: {{ .Job.CreationTimestamp }}</li>
+       <li>Labels:</li>
+       <ul>
+       {{ range $key, $value := .Job.Labels }}
+           <li>{{ $key }}: {{ $value }}</li>
+       {{ end }}
+      </ul> 
+      
+      <li>Started: {{ .Job.Status.StartTime }}</li>
+      <li>Active: {{ .Job.Status.Active }}</li>
+      <li>Succeeded: {{ .Job.Status.Succeeded }}</li>
+      <li>Failed: {{ .Job.Status.Failed }}</li>
+      </ul> 
+    </p>
+
+    
+    <div>Job Conditions</div>
+    <table class="table table-bordered table-sm">
+      <thead class="thead-light">
+      	<tr>
+          <th scope="col">Message</td>
+          <th scope="col">Reason</td>
+          <th scope="col">Type</td>
+          <th scope="col">Status</td>
+          <th scope="col">Last Probe Time</td>
+          <th scope="col">Last Transition Time</td>
+      </tr>
+    </thead>
+    <tbody>
+      	{{ with .Job.Status.Conditions }}
+			{{ range . }}
+      			<tr>
+              		<th scope="row">{{ .Message }}</td>
+                  <td>{{ .Reason }}</td>
+                  <td>{{ .Type }}</td>
+                  <td>{{ .Status }}</td>
+                  <td>{{ .LastProbeTime }}</td>
+                  <td>{{ .LastTransitionTime }}</td>
+            </tr>
+            </tbody>
+			{{ end }} 
+      	{{ end }}
+    </table>
+
+
+    <div>Managed Pods</div>
+    <table class="table table-bordered table-sm">
+      <thead class="thead-light">
+      	<tr>
+          <th scope="col">Name</td>
+          <th scope="col">Status</td>
+          <th scope="col">Created On</td>
+          <th scope="col">Log</td>
+      </tr>
+    </thead>
+    <tbody>
+      	{{ with .Pods }}
+			{{ range . }}
+      			<tr>
+              		<th scope="row">{{ .Name }}</td>
+                  <td>{{ .Status.Message }} {{ .Status.Reason }}</td>
+                  <td>{{ .CreationTimestamp }}</td>
+                  <td><a href="/logs/pod/{{ .Name }}/log">Logs</a></td>
+            </tr>
+            </tbody>
+			{{ end }} 
+      	{{ end }}
+    </table>
+  </body>
+</html>

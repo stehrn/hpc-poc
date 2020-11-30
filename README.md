@@ -52,15 +52,16 @@ see https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-
 ## Create Service Account
 Set up following:
 * Client: 
-  * create storage objects [storage.objectCreator]
-  * publish [pubsub.publisher]
+  * create storage objects [`storage.objectCreator`]
+  * publish [`pubsub.publisher`]
 
 * Orchestrator:
-  * subscribe [pubsub.subscriber ]
+  * subscribe [`pubsub.subscriber`]
+  * view [`pubsub.viewer`] (to check subscription exists)
 
 * Engine:
-  * read storage objects [storage.objectViewer]
-  * delete storage objects [storage.objects.delete]
+  * read storage objects [`storage.objectViewer`]
+  * delete storage objects [`storage.objects.delete`]
 
 ```
 // create service sccount 
@@ -70,6 +71,7 @@ gcloud iam service-accounts list
 // add roles
 gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/pubsub.subscriber 
 gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/pubsub.publisher
+gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/pubsub.viewer
 gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/storage.objectCreator
 gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/storage.objectViewer
 

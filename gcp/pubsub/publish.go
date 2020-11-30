@@ -2,7 +2,6 @@ package pubsub
 
 import (
 	"context"
-	"fmt"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/pkg/errors"
@@ -13,13 +12,21 @@ func (c Client) Publish(payload []byte) (string, error) {
 	if c.Topic == "" {
 		return "", errors.New("Topic required")
 	}
-	topic := c.client.Topic(c.Topic)
 	ctx := context.Background()
+	topic := c.client.Topic(c.Topic)
+	ok, err := topic.Exists(ctx)
+	if err != nil {
+		return "", errors.Wrapf(err, "Failed to find out if topic %s exists", c.Topic)
+	}
+	if !ok {
+		return "", errors.Errorf("Topic %s does not exist", c.Topic)
+	}
+
+	defer topic.Stop()
 	res := topic.Publish(ctx, &pubsub.Message{Data: payload})
 	id, err := res.Get(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "Could not publish message")
 	}
-	fmt.Printf("Published message with a message ID: %s", id)
 	return id, nil
 }

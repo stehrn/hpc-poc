@@ -22,3 +22,24 @@ gsutil ls -r gs://nik-stehr-hpc
 gcloud builds submit --config cloudbuild-go.yaml go-app
 ```
 [View build](https://console.cloud.google.com/cloud-build/builds/)
+
+
+
+
+
+
+PROJECT_NUM=$(gcloud projects list --filter="$PROJECT" --format="value(PROJECT_NUMBER)" --project=$PROJECT)
+SERVICE_ACCOUNT=${PROJECT_NUM}@cloudbuild.gserviceaccount.com
+gcloud projects add-iam-policy-binding $PROJECT --member=serviceAccount:$SERVICE_ACCOUNT --role=roles/container.developer --project=$PROJECT
+
+```
+
+
+export PROJECT=hpc-poc
+export CLUSTER=hpc-poc
+export LOCATION=europe-west2-a
+export PACKAGE=orchestrator
+
+gcloud builds submit --project=$PROJECT --config=cloudbuild_with_deploy.yaml --substitutions=_PACKAGE=$PACKAGE,_GKE_CLUSTER=$CLUSTER,_GKE_LOCATION=$LOCATION .
+
+

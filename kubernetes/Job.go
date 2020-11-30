@@ -1,9 +1,11 @@
 package kubernetes
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pkg/errors"
+	"github.com/stehrn/hpc-poc/gcp/storage"
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,8 +15,15 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
+// JobOptions details of job to create
+type JobOptions struct {
+	Name   string
+	Image  string
+	Labels map[string]string
+	storage.Location
+}
+
 // ListJobs list all jobs
-// calls List(opts metav1.ListOptions) (*v1.JobList, error)
 func (c Client) ListJobs() (*batchv1.JobList, error) {
 	result, err := c.jobsClient().List(metav1.ListOptions{})
 	if err != nil {
@@ -24,16 +33,17 @@ func (c Client) ListJobs() (*batchv1.JobList, error) {
 }
 
 // CreateJob create a k8 job
-func (c Client) CreateJob(info JobInfo) (*batchv1.Job, error) {
+func (c Client) CreateJob(options JobOptions) (*batchv1.Job, error) {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      info.Name,
+			Name:      options.Name,
 			Namespace: c.Namespace,
+			Labels:    options.Labels,
 		},
 		Spec: batchv1.JobSpec{
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
-					RestartPolicy: "OnFailure",
+					RestartPolicy: "Never",
 					Volumes: []apiv1.Volume{
 						{
 							Name: "google-cloud-key",
@@ -47,7 +57,7 @@ func (c Client) CreateJob(info JobInfo) (*batchv1.Job, error) {
 					Containers: []apiv1.Container{
 						{
 							Name:  "engine",
-							Image: info.Image,
+							Image: options.Image,
 							VolumeMounts: []apiv1.VolumeMount{
 								{
 									Name:      "google-cloud-key",
@@ -62,11 +72,11 @@ func (c Client) CreateJob(info JobInfo) (*batchv1.Job, error) {
 								},
 								{
 									Name:  "BUCKET_NAME",
-									Value: info.Bucket,
+									Value: options.Bucket,
 								},
 								{
 									Name:  "OBJECT_NAME",
-									Value: info.Object,
+									Value: options.Object,
 								},
 							},
 						},
@@ -78,7 +88,7 @@ func (c Client) CreateJob(info JobInfo) (*batchv1.Job, error) {
 
 	result, err := c.jobsClient().Create(job)
 	if err != nil {
-		return nil, errors.Wrapf(err, "falied to create job with %#v", info)
+		return nil, errors.Wrapf(err, "Failed to create job with options %#v", options)
 	}
 
 	log.Printf("Created job %q.\n", result.Name)
@@ -89,7 +99,7 @@ func (c Client) CreateJob(info JobInfo) (*batchv1.Job, error) {
 func (c Client) Job(jobName string) (*batchv1.Job, error) {
 	result, err := c.jobsClient().Get(jobName, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get job: '%s'", jobName)
+		return nil, errors.Wrapf(err, "Failed to get job: '%s'", jobName)
 	}
 	return result, nil
 }
@@ -101,6 +111,9 @@ func Status(status batchv1.JobStatus) string {
 	} else if status.Succeeded > 0 {
 		return "Successful"
 	} else if status.Failed > 0 {
+		if len(status.Conditions) > 0 {
+			return fmt.Sprintf("Failed (%s)", status.Conditions[0].Reason)
+		}
 		return "Failed"
 	}
 	return "Unkonwn"

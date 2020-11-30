@@ -18,7 +18,7 @@ type Client struct {
 
 // NewClient create Client
 func NewClient() (*Client, error) {
-	info := info()
+	info := clientFromEnvironment()
 	if info.Project == "" {
 		return nil, errors.New("Project required")
 	}
@@ -32,7 +32,7 @@ func NewClient() (*Client, error) {
 }
 
 // create info from environment variables: PROJECT_NAME, SUBSCRIPTION_NAME, TOPIC_NAME
-func info() Client {
+func clientFromEnvironment() Client {
 	return Client{
 		Project:      os.Getenv("PROJECT_NAME"),
 		Subscription: os.Getenv("SUBSCRIPTION_NAME"),

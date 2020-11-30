@@ -30,14 +30,14 @@
       	{{ with .Jobs }}
 			{{ range . }}
       			<tr>
-              		<th scope="row">{{ .Name }}</td>
+              		<th scope="row"><a href="/job/{{ .Name }}">{{ .Name }}</a></td>
                   <td>{{ .Status }}</td>
                   <td>{{ .StartTime }}</td>
                   <td>{{ .CompletionTime }}</td>
                   <td>{{ .Duration }}</td>
                   <td>{{ .Pod.Status }}</td>
                   <td>{{ .Pod.LastState.Type }} ({{ .Pod.LastState.Reason }} {{ .Pod.LastState.Message }})</td>
-                  <td><a href="/job/log/{{ .Name }}">Logs</a></td>
+                  <td><a href="/logs/job/{{ .Name }}/log">Logs</a></td>
             </tr>
             </tbody>
 			{{ end }} 

@@ -11,21 +11,12 @@ import (
 	// To support connecting to GKE from outside of cluster (if KUBE_CONFIG used)
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
-
-	"github.com/stehrn/hpc-poc/gcp/storage"
 )
 
 // Client can be used to create and list kubernete Jobs
 type Client struct {
 	Namespace string
 	clientSet *kubernetes.Clientset
-}
-
-// JobInfo details of job to create
-type JobInfo struct {
-	Name  string
-	Image string
-	storage.Location
 }
 
 // NewClient create Client
