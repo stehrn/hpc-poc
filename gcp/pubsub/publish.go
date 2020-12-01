@@ -9,11 +9,11 @@ import (
 
 // Publish publish to topic
 func (c Client) Publish(payload []byte) (string, error) {
-	if c.Topic == "" {
+	if c.TopicName == "" {
 		return "", errors.New("Topic required")
 	}
 	ctx := context.Background()
-	topic := c.client.Topic(c.Topic)
+	topic := c.Topic(c.TopicName)
 	ok, err := topic.Exists(ctx)
 	if err != nil {
 		return "", errors.Wrapf(err, "Failed to find out if topic %s exists", c.Topic)

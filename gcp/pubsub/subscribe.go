@@ -10,18 +10,18 @@ import (
 
 // Subscribe subscribe to given project/id, passing message into callpack
 func (c Client) Subscribe(callback func(ctx context.Context, m *pubsub.Message)) error {
-	if c.Subscription == "" {
+	if c.SubscriptionID == "" {
 		return errors.New("Subscription required")
 	}
-	log.Printf("Subscribing to project: '%s', subscriptionID: '%s'", c.Project, c.Subscription)
-	sub := c.client.Subscription(c.Subscription)
+	log.Printf("Subscribing to project: '%s', subscriptionID: '%s'", c.Project, c.SubscriptionID)
+	sub := c.Subscription(c.SubscriptionID)
 	ctx := context.Background()
 	ok, err := sub.Exists(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to find out if subscription '%s' exists", c.Subscription)
+		return errors.Wrapf(err, "Failed to find out if subscription '%s' exists", c.SubscriptionID)
 	}
 	if !ok {
-		return errors.Errorf("Subscription '%s' does not exist", c.Subscription)
+		return errors.Errorf("Subscription '%s' does not exist", c.SubscriptionID)
 	}
 
 	err = sub.Receive(context.Background(), callback)

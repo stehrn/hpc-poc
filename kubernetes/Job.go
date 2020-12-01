@@ -27,7 +27,7 @@ type JobOptions struct {
 func (c Client) ListJobs() (*batchv1.JobList, error) {
 	result, err := c.jobsClient().List(metav1.ListOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, "falied to list jobs")
+		return nil, errors.Wrap(err, "Failed to list jobs")
 	}
 	return result, nil
 }
@@ -90,9 +90,33 @@ func (c Client) CreateJob(options JobOptions) (*batchv1.Job, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to create job with options %#v", options)
 	}
-
-	log.Printf("Created job %q.\n", result.Name)
 	return result, nil
+}
+
+// Watch watch jobs
+func (c Client) Watch(jobSucceeded func(job *batchv1.Job)) error {
+
+	label := ""
+	watch, err := c.jobsClient().Watch(metav1.ListOptions{})
+	// TODO: add specific label
+	// metav1.ListOptions{
+	// 	LabelSelector: label,
+	// }
+	if err != nil {
+		return errors.Wrapf(err, "Failed to watch jobs with label: '%s'", label)
+	}
+	go func() {
+		for event := range watch.ResultChan() {
+			job, ok := event.Object.(*batchv1.Job)
+			if !ok {
+				log.Panicf("Unexpected type: '%v'", event.Type)
+			}
+			if job.Status.Succeeded == 1 {
+				jobSucceeded(job)
+			}
+		}
+	}()
+	return nil
 }
 
 // Job load job from job name

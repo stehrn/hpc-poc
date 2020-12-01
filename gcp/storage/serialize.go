@@ -13,12 +13,6 @@ func ToBytes(location Location) ([]byte, error) {
 		return nil, errors.Wrap(err, "Could not convert location to bytes")
 	}
 	return bytes, nil
-	// reqBodyBytes := new(bytes.Buffer)
-	// err := json.NewEncoder(reqBodyBytes).Encode(location)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "Could not convert location to bytes slice")
-	// }
-	// return reqBodyBytes.Bytes(), nil
 }
 
 // ToLocation convert []byte to Location

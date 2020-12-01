@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -29,14 +31,14 @@ type jobSummary struct {
 	Pod            podSummary
 }
 
-// JobTemplate
-type JobTemplate struct {
+// jobsTemplate data to render into jobs template
+type jobsTemplate struct {
 	Job  *batchv1.Job
 	Pods []apiv1.Pod
 }
 
-// Summary summary information aobut jobs
-type Summary struct {
+// summaryTemplate data to render into summary template
+type summaryTemplate struct {
 	Namespace string
 	Jobs      []jobSummary
 }
@@ -51,42 +53,51 @@ var templatePath string
 
 func init() {
 	templatePath := os.Getenv("TEMPLATE_PATH")
-	log.Printf("Loading template from path: %s", templatePath)
-}
-
-func (ctx *handlerContext) summary(w http.ResponseWriter, r *http.Request) {
-	summary, err := summary(ctx.client)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-	} else {
-		ctx.summaryTemplate.Execute(w, summary)
+	if templatePath != "" {
+		log.Printf("Loading template from path: %s", templatePath)
 	}
 }
 
-func (ctx *handlerContext) job(w http.ResponseWriter, r *http.Request) {
+func errorHandler(f func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := f(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func (ctx *handlerContext) summary(w http.ResponseWriter, r *http.Request) error {
+	summary, err := summary(ctx.client)
+	if err != nil {
+		return fmt.Errorf("Error creating summary page: %v", err)
+	}
+	ctx.summaryTemplate.Execute(w, summary)
+	return nil
+}
+
+func (ctx *handlerContext) job(w http.ResponseWriter, r *http.Request) error {
 	jobName := strings.TrimPrefix(r.URL.Path, "/job/")
 	if jobName == "" {
-		http.Error(w, "No job sepcified", 400)
-		return
+		return errors.New("No job sepcified")
 	}
 
 	job, _ := ctx.client.Job(jobName)
 	job, err := ctx.client.Job(jobName)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
+		return err
 	}
 
 	pods, err := ctx.client.Pods(jobName)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
+		return err
 	}
 
-	ctx.jobTemplate.Execute(w, JobTemplate{job, pods})
+	ctx.jobTemplate.Execute(w, jobsTemplate{job, pods})
+	return nil
 }
 
-func (ctx *handlerContext) logs(w http.ResponseWriter, r *http.Request) {
+func (ctx *handlerContext) logs(w http.ResponseWriter, r *http.Request) error {
 	split := strings.Split(r.URL.Path, "/")
 	objectType := split[2]
 	name := split[3]
@@ -98,15 +109,15 @@ func (ctx *handlerContext) logs(w http.ResponseWriter, r *http.Request) {
 	} else if objectType == "pod" {
 		logs, err = ctx.client.LogsForPod(name)
 	} else {
-		http.Error(w, "Unkown object type: "+objectType, 400)
-		return
+		return fmt.Errorf("Unkown object type: %v", objectType)
 	}
 
 	if err != nil {
-		http.Error(w, err.Error(), 500)
-	} else {
-		w.Write([]byte(logs))
+		return err
 	}
+
+	w.Write([]byte(logs))
+	return nil
 }
 
 func main() {
@@ -121,9 +132,9 @@ func main() {
 		summaryTemplate: loadTemplate("./summary.tmpl"),
 		jobTemplate:     loadTemplate("./job.tmpl")}
 
-	http.HandleFunc("/summary", ctx.summary)
-	http.HandleFunc("/job/", ctx.job)
-	http.HandleFunc("/logs/", ctx.logs)
+	http.HandleFunc("/summary", errorHandler(ctx.summary))
+	http.HandleFunc("/job/", errorHandler(ctx.job))
+	http.HandleFunc("/logs/", errorHandler(ctx.logs))
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -143,11 +154,11 @@ func loadTemplate(name string) *template.Template {
 }
 
 // https://gowalker.org/k8s.io/api/batch/v1#JobList
-func summary(client *k8.Client) (Summary, error) {
+func summary(client *k8.Client) (summaryTemplate, error) {
 	var jobs []jobSummary
 	jobList, err := client.ListJobs()
 	if err != nil {
-		return Summary{}, err
+		return summaryTemplate{}, err
 	}
 	for _, item := range jobList.Items {
 		job := jobSummary{
@@ -159,7 +170,7 @@ func summary(client *k8.Client) (Summary, error) {
 			Pod:            getPodSummary(client, item.Name)}
 		jobs = append(jobs, job)
 	}
-	return Summary{
+	return summaryTemplate{
 		Namespace: client.Namespace,
 		Jobs:      jobs}, nil
 }

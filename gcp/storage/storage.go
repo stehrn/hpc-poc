@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/stehrn/hpc-poc/internal/utils"
 )
 
@@ -19,27 +18,22 @@ type Location struct {
 }
 
 // LocationFromEnvironment  derive location from environment
-func LocationFromEnvironment() Location {
+func (c Client) LocationFromEnvironment() Location {
 	bucket := utils.Env("BUCKET_NAME")
 	object := utils.Env("OBJECT_NAME")
 	return Location{bucket, object}
 }
 
 // Upload upload object to Cloud Storage bucket
-func Upload(location Location, content []byte) error {
+func (c Client) Upload(location Location, content []byte) error {
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return fmt.Errorf("storage.NewClient: %v", err)
-	}
-	defer client.Close()
 
 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 	defer cancel()
 
 	// Upload an object with storage.Writer.
-	wc := client.Bucket(location.Bucket).Object(location.Object).NewWriter(ctx)
-	if _, err = io.Copy(wc, bytes.NewReader(content)); err != nil {
+	wc := c.Bucket(location.Bucket).Object(location.Object).NewWriter(ctx)
+	if _, err := io.Copy(wc, bytes.NewReader(content)); err != nil {
 		return fmt.Errorf("io.Copy: %v", err)
 	}
 	if err := wc.Close(); err != nil {
@@ -49,18 +43,13 @@ func Upload(location Location, content []byte) error {
 }
 
 // Download download an object
-func Download(location Location) ([]byte, error) {
+func (c Client) Download(location Location) ([]byte, error) {
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("storage.NewClient: %v", err)
-	}
-	defer client.Close()
 
 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 	defer cancel()
 
-	rc, err := client.Bucket(location.Bucket).Object(location.Object).NewReader(ctx)
+	rc, err := c.Bucket(location.Bucket).Object(location.Object).NewReader(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Object(%q).NewReader: %v", location.Object, err)
 	}
@@ -73,17 +62,14 @@ func Download(location Location) ([]byte, error) {
 	return data, nil
 }
 
-// Delete delete object
-func Delete(location Location) error {
+// Delete delete object at given location
+func (c Client) Delete(location Location) error {
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return fmt.Errorf("storage.NewClient: %v", err)
-	}
-	defer client.Close()
+
+	defer c.Close()
 
 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 	defer cancel()
 
-	return client.Bucket(location.Bucket).Object(location.Object).Delete(ctx)
+	return c.Bucket(location.Bucket).Object(location.Object).Delete(ctx)
 }

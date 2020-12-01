@@ -10,60 +10,53 @@ import (
 
 	"github.com/stehrn/hpc-poc/internal/utils"
 
-	"github.com/rs/xid"
 	"github.com/stehrn/hpc-poc/gcp/pubsub"
-	"github.com/stehrn/hpc-poc/gcp/storage"
 )
 
-// PageInfo info to render into template
-type PageInfo struct {
-	*pubsub.Client
-	Bucket  string
+// templateData data to render into template
+type templateData struct {
+	*Client
 	Message string
 }
 
 type handlerContext struct {
-	client   *pubsub.Client
-	Bucket   string
+	client   *Client
 	template *template.Template
 }
 
-func (ctx *handlerContext) handle(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		ctx.template.Execute(w, &PageInfo{ctx.client, ctx.Bucket, ""})
-	case "POST":
-		if err := r.ParseForm(); err != nil {
-			fmt.Fprintf(w, "ParseForm() err: %v", err)
-			return
-		}
-		data := []byte(r.FormValue("payload"))
+func (ctx handlerContext) templateData(message string) *templateData {
+	return &templateData{ctx.client, message}
+}
 
-		// upload payload to cloud storage
-		location := storage.Location{
-			Bucket: ctx.Bucket,
-			Object: xid.New().String()}
-		log.Printf("Uploading data to %v", location)
-		err := storage.Upload(location, data)
+func errorHandler(f func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := f(w, r)
 		if err != nil {
-			http.Error(w, err.Error(), 500)
-			return
-		}
-
-		// publish object location
-		log.Printf("Publishing location (%v) to topic %s", location, ctx.client.Topic)
-		bytes, err := storage.ToBytes(location)
-		if err != nil {
-			http.Error(w, err.Error(), 500)
-			return
-		}
-		id, err := ctx.client.Publish(bytes)
-		if err != nil {
-			http.Error(w, err.Error(), 500)
-		} else {
-			ctx.template.Execute(w, &PageInfo{ctx.client, ctx.Bucket, fmt.Sprintf("Payload uploaded to cloud storage location: %s, notification send with ID: %s", location, id)})
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
+}
+
+func (ctx *handlerContext) handle(w http.ResponseWriter, r *http.Request) error {
+	switch r.Method {
+	case "GET":
+		ctx.template.Execute(w, ctx.templateData(""))
+	case "POST":
+		if err := r.ParseForm(); err != nil {
+			return fmt.Errorf("ParseForm() err: %v", err)
+		}
+
+		data := []byte(r.FormValue("payload"))
+		location, id, err := ctx.client.handle(data)
+		if err != nil {
+			return fmt.Errorf("client.handle() err: %v", err)
+		}
+
+		message := fmt.Sprintf("Payload uploaded to cloud storage location: %s, notification send with ID: %s", location, id)
+		log.Print(message)
+		ctx.template.Execute(w, ctx.templateData(message))
+	}
+	return nil
 }
 
 func main() {
@@ -73,18 +66,17 @@ func main() {
 	clientTemplate := filepath.Join(templatePath, "./index.tmpl")
 	log.Printf("Loading template from: %s", clientTemplate)
 
-	pubsubClient, err := pubsub.NewClient()
+	bucket := utils.Env("BUCKET_NAME")
+	client, err := NewClient(bucket, pubsub.ConfigFromEnvironment())
 	if err != nil {
-		log.Fatalf("Could not create pubsub client: %v", err)
+		log.Fatalf("Could not create client: %v", err)
 	}
 
-	bucket := utils.Env("BUCKET_NAME")
 	ctx := &handlerContext{
-		client:   pubsubClient,
-		Bucket:   bucket,
+		client:   client,
 		template: template.Must(template.ParseFiles(clientTemplate))}
 
-	http.HandleFunc("/client", ctx.handle)
+	http.HandleFunc("/client", errorHandler(ctx.handle))
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -93,7 +85,7 @@ func main() {
 	}
 
 	log.Printf("Client created for project: %s, topic: %s, bucket: %s; listening on port %s",
-		pubsubClient.Project, pubsubClient.Topic, bucket, port)
+		client.Pubsub.Project, client.Pubsub.TopicName, bucket, port)
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)

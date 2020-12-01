@@ -8,33 +8,56 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Client client
+// ClientConfg pubsub client configuration
+type ClientConfg struct {
+	Project        string
+	SubscriptionID string
+	TopicName      string
+}
+
+// Client pubsub client
 type Client struct {
-	Project      string
-	Subscription string
-	Topic        string
-	client       *pubsub.Client
+	*ClientConfg
+	*pubsub.Client
 }
 
-// NewClient create Client
-func NewClient() (*Client, error) {
-	info := clientFromEnvironment()
-	if info.Project == "" {
-		return nil, errors.New("Project required")
+// NewClientFromEnvironment create Client
+func NewClientFromEnvironment() (*Client, error) {
+	return create(ConfigFromEnvironment())
+}
+
+// NewPubClient create new client for subscriptions
+func NewPubClient(config *ClientConfg) (*Client, error) {
+	if config.Project == "" {
+		return nil, errors.New("Missing project (PROJECT_NAME env variable)")
 	}
+	if config.TopicName == "" {
+		return nil, errors.New("Missing topics (TOPIC_NAME env variable)")
+	}
+	return create(config)
+}
+
+// NewSubClient create new client for subscriptions
+func NewSubClient(config *ClientConfg) (*Client, error) {
+	if config.TopicName == "" {
+		return nil, errors.New("Missing topics (TOPIC_NAME env variable)")
+	}
+	return create(config)
+}
+
+func create(config *ClientConfg) (*Client, error) {
 	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, info.Project)
+	pubsubClient, err := pubsub.NewClient(ctx, config.Project)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to create pubsub client (project %s)", info.Project)
+		return nil, errors.Wrapf(err, "Failed to create pubsub client (project %s)", config.Project)
 	}
-	info.client = client
-	return &info, nil
+	return &Client{config, pubsubClient}, nil
 }
 
-// create info from environment variables: PROJECT_NAME, SUBSCRIPTION_NAME, TOPIC_NAME
-func clientFromEnvironment() Client {
-	return Client{
-		Project:      os.Getenv("PROJECT_NAME"),
-		Subscription: os.Getenv("SUBSCRIPTION_NAME"),
-		Topic:        os.Getenv("TOPIC_NAME")}
+// ConfigFromEnvironment create info from environment variables: PROJECT_NAME, SUBSCRIPTION_NAME, TOPIC_NAME
+func ConfigFromEnvironment() *ClientConfg {
+	return &ClientConfg{
+		Project:        os.Getenv("PROJECT_NAME"),
+		SubscriptionID: os.Getenv("SUBSCRIPTION_NAME"),
+		TopicName:      os.Getenv("TOPIC_NAME")}
 }

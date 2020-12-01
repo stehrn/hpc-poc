@@ -6,22 +6,21 @@ import (
 	"github.com/stehrn/hpc-poc/gcp/storage"
 )
 
-// Simple engine that download a cloud storage object based on info in env, prints contents out, and exits
+// Simple engine that downloads a cloud storage object based on info in env, prints contents out, and exits
 func main() {
 	log.Print("Starting Engine")
 
-	location := storage.LocationFromEnvironment()
-	log.Printf("Loading data from cloud storage %v", location)
-	data, err := storage.Download(location)
+	client, err := storage.NewClient()
+	if err != nil {
+		log.Fatalf("Could not create storage client: %v", err)
+	}
+
+	location := client.LocationFromEnvironment()
+	log.Printf("Loading data from cloud storage location (bucket/object) %v", location)
+	data, err := client.Download(location)
 	if err != nil {
 		log.Fatalf("Failed to download object, error: %v", err)
 	}
 
 	log.Printf("Loaded data: %v", string(data))
-
-	log.Printf("Deleting cloud storage data at %v", location)
-	err = storage.Delete(location)
-	if err != nil {
-		log.Fatalf("Failed to delete object, error: %v", err)
-	}
 }
