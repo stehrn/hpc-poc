@@ -50,17 +50,23 @@ func main() {
 	}
 
 	err = pubsubClient.Subscribe(func(ctx context.Context, m *pubsub.Message) {
-		jobName := "engine-job-" + m.ID
 		location, err := storage.ToLocation(m.Data)
 		if err != nil {
-			log.Fatalf("Could not get location from message data: %v", err)
+			log.Printf("Could not get location from message data (%v), error: %v", m.Data, err)
+			return
 		}
-		labels := labels(k8Client, pubsubClient, location, m.ID)
-		options := k8.JobOptions{jobName, engineImage, labels, location}
-		log.Printf("Creating Job  with options: %v", options)
+
+		options := k8.JobOptions{
+			Name:     "engine-job-" + m.ID,
+			Image:    engineImage,
+			Labels:   labels(k8Client, pubsubClient, location, m.ID),
+			Location: location}
+
+		log.Printf("Creating Job with options: %v", options)
 		_, err = k8Client.CreateJob(options)
 		if err != nil {
 			log.Printf("Could not create job with options: %v, error: %v", options, err)
+			return
 		}
 
 		// TODO: decide what to do if we can't create a job, keep message on q?

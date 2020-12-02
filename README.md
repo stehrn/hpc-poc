@@ -1,6 +1,7 @@
 
 # POC of work queue
 
+* Overview
 * Creation and set-up of GCP resources
   * Init gcloud
   * Create [GKE](https://cloud.google.com/kubernetes-engine/docs/quickstart) 
@@ -15,6 +16,23 @@
 * Test
   * Submit jobs
   * View activity
+
+# Overview 
+## Flow
+* client 
+  * write data to cloud storage bucket
+  * publish message containing data location (bucket/object)
+* orchestrator 
+  * subscribes to topic
+    * on message - create kubernetes Job, passing it location of cloud storage data
+  * watches jobs
+    * on job success - delete cloud storage object
+* engine
+   * reads cloud storage data, does something with it, exists
+
+## Web applications
+ * client - submit data 
+ * monitor - view jobs and pods (extend to view pubsub details)
 
 # Init gcloud
 Note, some of following commands require: `export PROJECT_NAME=<GCP project>`
@@ -120,15 +138,3 @@ gcloud pubsub topics publish test-topic --message="engine payload 1"
 ```
 kubectl logs --selector=app=orchestrator --tail 100
 ```
-
-# Articles 
-* https://blog.meain.io/2019/accessing-kubernetes-api-from-pod/
-* https://cloud.google.com/pubsub/docs/quickstart-cli
-* https://cloud.google.com/appengine/docs/flexible/go/writing-and-responding-to-pub-sub-messages
-* https://github.com/googleapis/google-cloud-go/blob/master/pubsub/example_test.go
-* https://pkg.go.dev/cloud.google.com/go/pubsub#example-Client.CreateSubscription
-* https://cloud.google.com/run/docs/tutorials/pubsub
-* https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform
-
-Argo looks interesting ....
-https://github.com/argoproj/argo/blob/master/workflow/controller/workflowpod.go
