@@ -8,6 +8,8 @@ The engine itself requires the following env variables:
 * `OBJECT_NAME`
 * `GOOGLE_APPLICATION_CREDENTIALS` to enable download payload from cloud storage
 
+Note, some of following commands require: `export PROJECT_NAME=<GCP project>`
+
 # Build
 Run:
 ```
@@ -15,8 +17,8 @@ gcloud builds submit --config=cloudbuild.yaml --substitutions=_PACKAGE="engine" 
 ```
 View image:
 ```
-gcloud container images list --repository=gcr.io/hpc-poc
-gcloud container images list-tags gcr.io/hpc-poc/engine
+gcloud container images list --repository=gcr.io/${PROJECT_NAME}
+gcloud container images list-tags gcr.io/${PROJECT_NAME}/engine
 ```
 
 # Deploy

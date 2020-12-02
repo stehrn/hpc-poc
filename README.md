@@ -17,8 +17,10 @@
   * View activity
 
 # Init gcloud
+Note, some of following commands require: `export PROJECT_NAME=<GCP project>`
+
 ```
-gcloud config set project hpc-poc
+gcloud config set project ${PROJECT_NAME}
 gcloud config set compute/zone europe-west2-a
 ```
 
@@ -33,8 +35,9 @@ gcloud container clusters get-credentials hpc-poc
 View workload in [console](https://console.cloud.google.com/kubernetes/workload/)
 
 # Create cloud storage bucket 
+Data will be written by client, read by engine, and deleted by orchestrator
 ```
-gsutil mb -p hpc-poc -c STANDARD -l europe-west2 -b on gs://stehrn_hpc-poc
+gsutil mb -p ${PROJECT_NAME} -c STANDARD -l europe-west2 -b on gs://stehrn_hpc-poc
 ```
 
 # Create (test) topic and subscription
