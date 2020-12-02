@@ -1,16 +1,18 @@
 # Client container
-Simple web app to submit jobs
+Client API for submitting jobs, includes simple web app to submit jobs
+
+Note, some of following commands require: `export PROJECT_NAME=<GCP project>`
 
 # Build
 Run (from base module dir):
 ```
-gcloud builds submit --config=cloudbuild.yaml --substitutions=_PACKAGE="client",_DOCKERFILE="DockerfileForWeb" .
+gcloud builds submit --config=cloudbuild.yaml --substitutions=_PROJECT=${PROJECT_NAME},_PACKAGE="client",_DOCKERFILE="DockerfileForWeb" .
 
 ```
 View image:
 ```
-gcloud container images list --repository=gcr.io/hpc-poc
-gcloud container images list-tags gcr.io/hpc-poc/client
+gcloud container images list --repository=gcr.io/${PROJECT_NAME}
+gcloud container images list-tags gcr.io/${PROJECT_NAME}/client
 ```
 
 # Deploy

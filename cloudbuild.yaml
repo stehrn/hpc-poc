@@ -5,11 +5,11 @@ steps:
   args:
   - build
   - --build-arg=PACKAGE=${_PACKAGE}
-  - -t=gcr.io/hpc-poc/${_PACKAGE}
+  - -t=gcr.io/${_PROJECT}/${_PACKAGE}
   - .
   - --file=${_DOCKERFILE}
 - name: 'gcr.io/cloud-builders/docker'
   id: 'Push'
-  args: ["push", "gcr.io/hpc-poc/${_PACKAGE}"]  
+  args: ["push", "gcr.io/${_PROJECT}/${_PACKAGE}"]  
 substitutions:
-    _DOCKERFILE: Dockerfile # default value        
+    _DOCKERFILE: Dockerfile # default value  

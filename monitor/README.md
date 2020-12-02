@@ -1,15 +1,17 @@
 # Monitor container
 Simple web app to view jobs and logs 
 
+Note, some of following commands require: `export PROJECT_NAME=<GCP project>`
+
 # Build
 Run (from base module dir):
 ```
-gcloud builds submit --config=cloudbuild.yaml --substitutions=_PACKAGE="monitor",_DOCKERFILE="DockerfileForWeb" .
+gcloud builds submit --config=cloudbuild.yaml --substitutions=_PROJECT=${PROJECT_NAME},_PACKAGE="monitor",_DOCKERFILE="DockerfileForWeb" .
 ```
 View image:
 ```
-gcloud container images list --repository=gcr.io/hpc-poc
-gcloud container images list-tags gcr.io/hpc-poc/monitor
+gcloud container images list --repository=gcr.io/${PROJECT_NAME}
+gcloud container images list-tags gcr.io/${PROJECT_NAME}/monitor
 ```
 
 # Deploy

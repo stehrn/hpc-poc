@@ -1,8 +1,7 @@
 # Engine container
-A simple engine that downloads an object from GCP cloud storage bucket, prints it out, 
-deletes the object from cloud storage, and exits.
+A simple engine that downloads an object from GCP cloud storage bucket, prints it out, and exits.
 
-Image is referenced in orchestrator deployment (`ENGINE_IMAGE`)
+Image is referenced in [orchestrator](../orchestrator/README.md) deployment (`ENGINE_IMAGE`)
 
 The engine itself requires the following env variables:
 * `BUCKET_NAME` 
@@ -21,7 +20,7 @@ gcloud container images list-tags gcr.io/hpc-poc/engine
 ```
 
 # Deploy
-Engine image is not deployed as container into GKE, rather referenced in Job created by orchestrator
+Engine image is not deployed as container into GKE, rather referenced in `Job` created by [orchestrator](../orchestrator/README.md)
 
 
 

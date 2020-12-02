@@ -55,14 +55,15 @@ func main() {
 		if err != nil {
 			log.Fatalf("Could not get location from message data: %v", err)
 		}
-		options := k8.JobOptions{jobName, engineImage, createLabels(pubsubClient, location, m.ID), location}
+		labels := labels(k8Client, pubsubClient, location, m.ID)
+		options := k8.JobOptions{jobName, engineImage, labels, location}
 		log.Printf("Creating Job  with options: %v", options)
 		_, err = k8Client.CreateJob(options)
 		if err != nil {
 			log.Printf("Could not create job with options: %v, error: %v", options, err)
 		}
 
-		// TODO: decide what to do if we can't create a job
+		// TODO: decide what to do if we can't create a job, keep message on q?
 		m.Ack()
 	})
 
@@ -71,9 +72,9 @@ func main() {
 	}
 }
 
-func createLabels(pubsubClient *messaging.Client, location storage.Location, messageID string) map[string]string {
+func labels(k8Client *k8.Client, pubsubClient *messaging.Client, location storage.Location, messageID string) map[string]string {
 	labels := make(map[string]string)
-	labels["k8.namespace"] = ""
+	labels["k8.namespace"] = k8Client.Namespace
 	labels["gcp.storage.bucket"] = location.Bucket
 	labels["gcp.storage.object"] = location.Object
 	labels["gcp.pubsub.project"] = pubsubClient.Project
