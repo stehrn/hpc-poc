@@ -18,5 +18,7 @@ spec:
         env:
         - name: TEMPLATE_PATH
           value: /app
+        - name: NAMESPACE
+          value: default
       serviceAccount: monitor
       serviceAccountName: monitor

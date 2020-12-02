@@ -52,7 +52,7 @@ type handlerContext struct {
 var templatePath string
 
 func init() {
-	templatePath := os.Getenv("TEMPLATE_PATH")
+	templatePath = os.Getenv("TEMPLATE_PATH")
 	if templatePath != "" {
 		log.Printf("Loading template from path: %s", templatePath)
 	}

@@ -23,9 +23,7 @@ Get port:
 ```
 kubectl get service client
 ```
-Open browswer at: http://<external-ip>:<port>/client
-
-(from above example - http://35.234.146.8:8082/client)
+Open browswer at: http://<external-ip>:<port>/client (use port number on left hand side of ':')
 
 # Monitor
 View logs:
@@ -36,8 +34,7 @@ kubectl logs --selector=app=client --tail 100
 # Delete
 Run:
 ```
-kubectl delete pods,services -l app=client
-kubectl delete deployment client
+kubectl delete deployment client && kubectl delete pods,services -l app=client 
 ```
 
 # Run locally

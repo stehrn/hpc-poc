@@ -1,19 +1,42 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Monitor</title>
+    <title>Monitor (Summary)</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-  </head>
-  <body>
-    <p>
-      Monitor for: 
-      <ul>
-        <li>Namespace: {{ .Namespace }}</li>
-      </ul> 
-    </p>
+	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/dataTables.bootstrap4.min.css">
+<style type="text/css" class="init">
+	
+	</style>
+
+	<script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap4.min.js"></script>
+	<script type="text/javascript" class="init">
+
+<script type="text/javascript" class="init">
+$(document).ready(function() {
+	$('#summary').DataTable();
+} );
+
+	</script>
+
+</head>
+<body>
     
-    <table class="table table-bordered table-sm">
+    
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm bg-light">
+        <h2>Monitor (Summary)</h2>      
+        <p class="lead">
+          <h6>Namespace: <span class="badge badge-secondary">{{ .Namespace }}</span></h6>
+        </p>
+      </div>
+    </div>
+
+    <table id="summary" class="table table-bordered table-sm">
       <thead class="thead-light">
       	<tr>
           <th scope="col">Job Name</td>
@@ -37,7 +60,7 @@
                   <td>{{ .Duration }}</td>
                   <td>{{ .Pod.Status }}</td>
                   <td>{{ .Pod.LastState.Type }} ({{ .Pod.LastState.Reason }} {{ .Pod.LastState.Message }})</td>
-                  <td><a href="/logs/job/{{ .Name }}/log">Logs</a></td>
+                  <td><a href="/logs/job/{{ .Name }}">Logs</a></td>
             </tr>
             </tbody>
 			{{ end }} 

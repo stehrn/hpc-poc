@@ -2,25 +2,60 @@
 <html>
   <head>
     <title>Client</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   </head>
   <body>
-    <p>
-      Client for: 
-      <ul>
-        <li>Project: {{ .Pubsub.Project }}</li>
-        <li>Topic: {{ .Pubsub.TopicName }}</li>
-        <li>Bucket: {{ .Bucket }}</li>
-      </ul> 
+
+<div class="container-fluid">
+   <div class="row">
+   <div class="col-sm bg-light">
+    
+    <h2>Client</h2>
+    <p class="lead">
+        <h6>Project: <span class="badge badge-secondary">{{ .Pubsub.Project }}</span></h6>
+        <h6>Bucket: <span class="badge badge-secondary">{{ .Bucket }}</span></h6>
+        <h6>Topic: <span class="badge badge-secondary">{{ .Pubsub.TopicName }}</span></h6>
     </p>
-    <div>
+    <p class="lead">
       <form method="POST" action="/client">     
-      <label>Payload</label><input name="payload" type="text" value="" />
-      <input type="submit" value="submit" />
+        <div class="form-group">
+        <label for="payload">Payload</label>
+        <textarea class="form-control" id="payload" name="payload" rows="3"></textarea>
+        </div>
+        <input class="btn btn-lg btn-primary" type="submit" value="submit" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample"/>
       </form>
+    </p>
+    <p>On submit: 
+       <ul>
+        <li>Payload will be uploaded to cloud storage bucket <span class="badge badge-secondary">{{ .Bucket }}</span></li>
+        <li>A message with location of bucket object will be published to topic <span class="badge badge-secondary">{{ .Pubsub.TopicName }}</span></li>
+       </ul>
+    </p>
+    {{if .Message }}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      {{ .Message }}
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+      </button>
     </div>
-    <div>
-    {{ .Message }}
+    {{end}}
+  </div>
+  <div class="collapse" id="collapseExample">
+    <div class="card card-body">
+      <div class="spinner-border" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
     </div>
-  </body>
+  
+
+</div>
+</div>
+</div>
+
+ </body>
 </html>
+
+

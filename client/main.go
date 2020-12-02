@@ -52,7 +52,7 @@ func (ctx *handlerContext) handle(w http.ResponseWriter, r *http.Request) error 
 			return fmt.Errorf("client.handle() err: %v", err)
 		}
 
-		message := fmt.Sprintf("Payload uploaded to cloud storage location: %s, notification send with ID: %s", location, id)
+		message := fmt.Sprintf("Payload uploaded to cloud storage location: %s, notification sent with message ID: %s", location, id)
 		log.Print(message)
 		ctx.template.Execute(w, ctx.templateData(message))
 	}

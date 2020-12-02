@@ -3,31 +3,36 @@
   <head>
     <title>Monitor</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-
   </head>
   <body>
-    <p>
-      <ul>
-       <li>Name: {{ .Job.Name }}</li>
-       <li>ClusterName: {{ .Job.ClusterName }}</li>
-       <li>Namespace: {{ .Job.Namespace }}</li>
-       <li>Created: {{ .Job.CreationTimestamp }}</li>
-       <li>Labels:</li>
-       <ul>
-       {{ range $key, $value := .Job.Labels }}
-           <li>{{ $key }}: {{ $value }}</li>
-       {{ end }}
-      </ul> 
-      
-      <li>Started: {{ .Job.Status.StartTime }}</li>
-      <li>Active: {{ .Job.Status.Active }}</li>
-      <li>Succeeded: {{ .Job.Status.Succeeded }}</li>
-      <li>Failed: {{ .Job.Status.Failed }}</li>
-      </ul> 
-    </p>
 
-    
-    <div>Job Conditions</div>
+  <div class="container-fluid">
+   <div class="row">
+   <div class="col-sm bg-light">
+
+    <h2>Monitor (Jobs)</h2>      
+    <p class="lead">
+        <h6>Job Name: <span class="badge badge-secondary">{{ .Job.Name }}</span></h6>
+        <h6>Cluster Name: <span class="badge badge-secondary">{{ .Job.ClusterName }}</span></h6>
+        <h6>Namespace: <span class="badge badge-secondary">{{ .Job.Namespace }}</span></h6>
+        <h6>Created: <span class="badge badge-secondary">{{ .Job.CreationTimestamp }}</span></h6>
+        <h6>Labels: </h6>
+        <ul>
+        {{ range $key, $value := .Job.Labels }}
+           <li>{{ $key }}: <span class="badge badge-info">{{ $value }}</span></li>
+        {{ end }}
+        </ul>
+        <h6>Started: <span class="badge badge-secondary">{{ .Job.Status.StartTime }}</span></h6>
+        <ul>
+          <li>Active <span class="badge badge-primary badge-pill">{{ .Job.Status.Active }}</span></li>
+          <li>Succeeded <span class="badge badge-success badge-pill">{{ .Job.Status.Succeeded }}</span></li>
+          <li>Failed <span class="badge badge-danger badge-pill">{{ .Job.Status.Failed }}</span></li>
+        </ul>
+     </p>
+    </div>
+    </div>
+
+  <h4>Job Conditions</h4>
     <table class="table table-bordered table-sm">
       <thead class="thead-light">
       	<tr>
@@ -43,7 +48,7 @@
       	{{ with .Job.Status.Conditions }}
 			{{ range . }}
       			<tr>
-              		<th scope="row">{{ .Message }}</td>
+              		<th>{{ .Message }}</td>
                   <td>{{ .Reason }}</td>
                   <td>{{ .Type }}</td>
                   <td>{{ .Status }}</td>
@@ -56,7 +61,7 @@
     </table>
 
 
-    <div>Managed Pods</div>
+  <h4>Managed Pods</h4>
     <table class="table table-bordered table-sm">
       <thead class="thead-light">
       	<tr>
@@ -70,7 +75,7 @@
       	{{ with .Pods }}
 			{{ range . }}
       			<tr>
-              		<th scope="row">{{ .Name }}</td>
+              		<th>{{ .Name }}</td>
                   <td>{{ .Status.Message }} {{ .Status.Reason }}</td>
                   <td>{{ .CreationTimestamp }}</td>
                   <td><a href="/logs/pod/{{ .Name }}/log">Logs</a></td>
@@ -79,5 +84,8 @@
 			{{ end }} 
       	{{ end }}
     </table>
+
+
+   </div>
   </body>
 </html>
