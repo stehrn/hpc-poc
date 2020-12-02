@@ -1,17 +1,31 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Monitor</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>Monitor (Jobs)</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   </head>
   <body>
 
   <div class="container-fluid">
    <div class="row">
-   <div class="col-sm bg-light">
+     <div class="col-sm bg-light">
 
-    <h2>Monitor (Jobs)</h2>      
-    <p class="lead">
+      <h2>Monitor (Jobs)</h2>    
+
+      {{ $lastPod := .LastPod }}
+      {{if $lastPod.IsError }}
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ $lastPod.Condition.Reason }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      {{end}}
+
+      <p class="lead">
         <h6>Job Name: <span class="badge badge-secondary">{{ .Job.Name }}</span></h6>
         <h6>Cluster Name: <span class="badge badge-secondary">{{ .Job.ClusterName }}</span></h6>
         <h6>Namespace: <span class="badge badge-secondary">{{ .Job.Namespace }}</span></h6>
@@ -28,13 +42,30 @@
           <li>Succeeded <span class="badge badge-success badge-pill">{{ .Job.Status.Succeeded }}</span></li>
           <li>Failed <span class="badge badge-danger badge-pill">{{ .Job.Status.Failed }}</span></li>
         </ul>
-     </p>
-    </div>
-    </div>
+      </p>
+     </div>
+   </div>
 
-  <h4>Job Conditions</h4>
-    <table class="table table-bordered table-sm">
-      <thead class="thead-light">
+  <div class="row">
+    <div class="col-sm bg-light">
+      <p class="lead">
+      <h4>Pod Specification</h4>
+      <h6>Labels: </h6>
+        <ul>
+        {{ range .Job.ContainerEnv }}
+           <li>{{ .Name }}: <span class="badge badge-info">{{ .Value }}</span></li>
+        {{ end }}
+        </ul>
+      </p>  
+    </div>
+  </div>
+
+   <div class="row">
+     <div class="col-sm bg-light">
+      <p class="lead">
+      <h4>Job Conditions</h4>
+      <table class="table table-bordered table-sm">
+        <thead class="thead-light">
       	<tr>
           <th scope="col">Message</td>
           <th scope="col">Reason</td>
@@ -42,50 +73,81 @@
           <th scope="col">Status</td>
           <th scope="col">Last Probe Time</td>
           <th scope="col">Last Transition Time</td>
-      </tr>
-    </thead>
-    <tbody>
+        </tr>
+      </thead>
+      <tbody>
       	{{ with .Job.Status.Conditions }}
-			{{ range . }}
-      			<tr>
-              		<th>{{ .Message }}</td>
-                  <td>{{ .Reason }}</td>
-                  <td>{{ .Type }}</td>
-                  <td>{{ .Status }}</td>
-                  <td>{{ .LastProbeTime }}</td>
-                  <td>{{ .LastTransitionTime }}</td>
-            </tr>
-            </tbody>
-			{{ end }} 
+			  {{ range . }}
+      	  <tr>
+            <th>{{ .Message }}</td>
+            <td>{{ .Reason }}</td>
+            <td>{{ .Type }}</td>
+            <td>{{ .Status }}</td>
+            <td>{{ .LastProbeTime }}</td>
+            <td>{{ .LastTransitionTime }}</td>
+          </tr>
+        {{ end }} 
       	{{ end }}
-    </table>
+      </tbody>
+      </table>
+      </p>  
+    </div>
+  </div>
 
-
-  <h4>Managed Pods</h4>
-    <table class="table table-bordered table-sm">
+  <div class="row">
+    <div class="col-sm bg-light">
+      <p class="lead">
+      <h4>Managed Pods</h4>
+      <table class="table table-bordered table-sm">
       <thead class="thead-light">
       	<tr>
           <th scope="col">Name</td>
           <th scope="col">Status</td>
+          <th scope="col">Condition</td>
           <th scope="col">Created On</td>
           <th scope="col">Log</td>
-      </tr>
-    </thead>
-    <tbody>
-      	{{ with .Pods }}
+        </tr>
+      </thead>
+      <tbody>
+      {{ with .Pods }}
 			{{ range . }}
-      			<tr>
-              		<th>{{ .Name }}</td>
-                  <td>{{ .Status.Message }} {{ .Status.Reason }}</td>
-                  <td>{{ .CreationTimestamp }}</td>
-                  <td><a href="/logs/pod/{{ .Name }}/log">Logs</a></td>
-            </tr>
-            </tbody>
+      	<tr>
+          <th>{{ .Name }}</td>
+          <td>
+          {{if .Status.Conditions}}
+            {{ $status := (index .Status.Conditions 0).Reason }}
+            {{ if eq $status "Unschedulable" }}
+              <span class="badge badge-danger">{{ $status }}</span>
+            {{ else }}
+            <span class="badge badge-info">{{ $status }}</span>
+            {{end}}
+          {{end}}
+          </td>
+          <td>
+            <ul>
+            {{if .Status.Conditions}}
+            {{ $condition := (index .Status.Conditions 0) }}
+              <li>Type: <span class="badge badge-info">{{ $condition.Type }}</span></li>
+              <li>Status: <span class="badge badge-info">{{ $condition.Status }}</span></li>
+              <li>LastProbeTime: <span class="badge badge-info">{{ $condition.LastProbeTime }}</span></li>
+              <li>Reason: <span class="badge badge-info">{{ $condition.Reason }}</span></li>
+              <li>Message: <span class="badge badge-info">{{ $condition.Message }}</span></li>
+            {{end}}
+            </ul>
+          </td>
+          <td>{{ .CreationTimestamp }}</td>
+          <td><a href="/logs/pod/{{ .Name }}/log">Logs</a></td>
+        </tr>
 			{{ end }} 
-      	{{ end }}
-    </table>
+      {{ end }}
+      </tbody>
+      </table>
+      </p>  
+    </div>
+  </div>
 
 
-   </div>
-  </body>
+
+ </div>
+</body>
 </html>

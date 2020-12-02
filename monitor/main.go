@@ -31,10 +31,39 @@ type jobSummary struct {
 	Pod            podSummary
 }
 
+// so we can add our own methods
+type myJob struct {
+	*batchv1.Job
+}
+
 // jobsTemplate data to render into jobs template
 type jobsTemplate struct {
-	Job  *batchv1.Job
+	Job  myJob
 	Pods []apiv1.Pod
+}
+
+type lastPod struct {
+	Condition apiv1.PodCondition
+	IsError   bool
+}
+
+func (j jobsTemplate) LastPod() lastPod {
+	if len(j.Pods) != 0 {
+		conditions := j.Pods[0].Status.Conditions
+		if len(conditions) != 0 {
+			condition := conditions[0]
+			var jobError bool
+			if condition.Reason == "Unschedulable" {
+				jobError = true
+			}
+			return lastPod{condition, jobError}
+		}
+	}
+	return lastPod{apiv1.PodCondition{}, false}
+}
+
+func (j myJob) ContainerEnv() []apiv1.EnvVar {
+	return j.Spec.Template.Spec.Containers[0].Env
 }
 
 // summaryTemplate data to render into summary template
@@ -93,7 +122,7 @@ func (ctx *handlerContext) job(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	ctx.jobTemplate.Execute(w, jobsTemplate{job, pods})
+	ctx.jobTemplate.Execute(w, jobsTemplate{myJob{job}, pods})
 	return nil
 }
 
@@ -167,7 +196,7 @@ func summary(client *k8.Client) (summaryTemplate, error) {
 			StartTime:      k8.ToString(item.Status.StartTime),
 			CompletionTime: k8.ToString(item.Status.CompletionTime),
 			Duration:       k8.Duration(item.Status.StartTime, item.Status.CompletionTime),
-			Pod:            getPodSummary(client, item.Name)}
+			Pod:            summaryForPod(client, item.Name)}
 		jobs = append(jobs, job)
 	}
 	return summaryTemplate{
@@ -177,7 +206,7 @@ func summary(client *k8.Client) (summaryTemplate, error) {
 
 // Pod Status
 // Last Pod State (type/reason/message)
-func getPodSummary(client *k8.Client, jobName string) podSummary {
+func summaryForPod(client *k8.Client, jobName string) podSummary {
 	pod, _ := client.LatestPod(jobName)
 	podStatus := pod.Status
 	conditions := podStatus.Conditions
