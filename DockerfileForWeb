@@ -24,7 +24,7 @@ RUN go mod download
 COPY . ./
 
 # Build the binary.
-RUN go build  -v -o server github.com/stehrn/hpc-poc/${PACKAGE}
+RUN go build  -v -o server github.com/stehrn/hpc-poc/cmd/${PACKAGE}
 
 # Use the official Debian slim image for a lean production container.
 # https://hub.docker.com/_/debian
@@ -37,10 +37,9 @@ RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -
 ARG PACKAGE
 RUN echo "Running runtime build for package ${PACKAGE}"
 
-
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /app/server /app/server
-COPY --from=builder /app/${PACKAGE}/*.tmpl /app/
+COPY --from=builder /app/cmd/${PACKAGE}/*.tmpl /app/
 
 # Run the service on container startup.
 CMD ["/app/server"]

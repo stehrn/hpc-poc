@@ -23,4 +23,9 @@ func main() {
 	}
 
 	log.Printf("Loaded data: %v", string(data))
+
+	// to simulate engine failure
+	if string(data) == "PANIC" {
+		panic("engine failed!")
+	}
 }

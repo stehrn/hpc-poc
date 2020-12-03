@@ -8,19 +8,19 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/stehrn/hpc-poc/internal/utils"
-
+	"github.com/stehrn/hpc-poc/client"
 	"github.com/stehrn/hpc-poc/gcp/pubsub"
+	"github.com/stehrn/hpc-poc/internal/utils"
 )
 
 // templateData data to render into template
 type templateData struct {
-	*Client
+	*client.Client
 	Message string
 }
 
 type handlerContext struct {
-	client   *Client
+	client   *client.Client
 	template *template.Template
 }
 
@@ -47,7 +47,7 @@ func (ctx *handlerContext) handle(w http.ResponseWriter, r *http.Request) error 
 		}
 
 		data := []byte(r.FormValue("payload"))
-		location, id, err := ctx.client.handle(data)
+		location, id, err := ctx.client.Handle(data)
 		if err != nil {
 			return fmt.Errorf("client.handle() err: %v", err)
 		}
@@ -67,7 +67,7 @@ func main() {
 	log.Printf("Loading template from: %s", clientTemplate)
 
 	bucket := utils.Env("BUCKET_NAME")
-	client, err := NewClient(bucket, pubsub.ConfigFromEnvironment())
+	client, err := client.NewClient(bucket, pubsub.ConfigFromEnvironment())
 	if err != nil {
 		log.Fatalf("Could not create client: %v", err)
 	}
@@ -78,16 +78,20 @@ func main() {
 
 	http.HandleFunc("/client", errorHandler(ctx.handle))
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8082"
-		log.Printf("Defaulting to port %s", port)
-	}
-
+	port := port()
 	log.Printf("Client created for project: %s, topic: %s, bucket: %s; listening on port %s",
 		client.Pubsub.Project, client.Pubsub.TopicName, bucket, port)
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func port() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8082"
+		log.Printf("Defaulting to port %s", port)
+	}
+	return port
 }

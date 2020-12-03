@@ -165,16 +165,20 @@ func main() {
 	http.HandleFunc("/job/", errorHandler(ctx.job))
 	http.HandleFunc("/logs/", errorHandler(ctx.logs))
 
+	port := port()
+	log.Printf("Monitor service Listening on port %s", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func port() string {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8081"
 		log.Printf("Defaulting to port %s", port)
 	}
-
-	log.Printf("Monitor service Listening on port %s", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatal(err)
-	}
+	return port
 }
 
 func loadTemplate(name string) *template.Template {

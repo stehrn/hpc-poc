@@ -8,11 +8,7 @@
   * Create cloud storage bucket 
   * Create topic and subscription
   * Create GCP Service Account 
-* Container build (with [Cloud Build](https://cloud.google.com/cloud-build)) and GKE deploymentmentof:  
-  * Orchestrator
-  * Engine (no deploy)
-  * Client 
-  * Monitor
+* Build and deploy containers  
 * Test
   * Submit jobs
   * View activity
@@ -21,14 +17,14 @@
 ## Flow
 * client 
   * write data to cloud storage bucket
-  * publish message containing data location (bucket/object)
+  * publish message containing data location on cloud storage (bucket/object)
 * orchestrator 
-  * subscribes to topic
+  * subscribes to subscription (`SUBSCRIPTION_NAME` env)
     * on message - create kubernetes Job, passing it location of cloud storage data
   * watches jobs
     * on job success - delete cloud storage object
 * engine
-   * reads cloud storage data, does something with it, exists
+   * reads cloud storage data, does something with it, exits
 
 ## Web applications
  * client - submit data 
@@ -112,27 +108,21 @@ kubectl create secret generic pubsub-acc-key --from-file=key.json=${HOME}/key.js
 # Build and deploy containers
 Submit build to [cloud-build](https://cloud.google.com/cloud-build), which stores image in the [container-registry](https://cloud.google.com/container-registry); see [build-and-deploy](https://cloud.google.com/run/docs/quickstarts/build-and-deploy) quickstart.
 
-## Orchestrator
-see [orchestrator/README.md](orchestrator/README.md)
-
-## Engine
-see [engine/README.md](engine/README.md)
-
-## Client
-see [client/README.md](client/README.md)
-
-## Monitor
-see [monitor/README.md](monitor/README.md)
+[Build and deploy*](BUILD_AND_DEPLOY.md):
+* orchestrator
+* engine (*no deploy)
+* client
+* monitor
 
 # Test
 ## Submit jobs
-Use [web client](client/README.md) or gcloud shell:
+Use web client or gcloud shell:
 ```
 gcloud pubsub topics publish test-topic --message="engine payload 1"
 ```
 
 ## View activity
-* Use [web monitor](monitor/README.md) to view job/engine logs
+* Use web monito to view job/engine logs
 * View workload in [console](https://console.cloud.google.com/kubernetes/workload/)
 * Use `kubectl`:
 ```

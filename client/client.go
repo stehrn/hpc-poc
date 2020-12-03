@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"log"
@@ -34,7 +34,8 @@ func (c Client) location() storage.Location {
 		Object: xid.New().String()}
 }
 
-func (c Client) handle(data []byte) (storage.Location, string, error) {
+// Handle handle data
+func (c Client) Handle(data []byte) (storage.Location, string, error) {
 	// upload payload to cloud storage
 	location := c.location()
 	log.Printf("Uploading data to %v", location)

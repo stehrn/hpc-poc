@@ -24,7 +24,7 @@ RUN go mod download
 COPY . ./
 
 # Build the binary.
-RUN go build  -v -o server github.com/stehrn/hpc-poc/${PACKAGE}
+RUN go build  -v -o server github.com/stehrn/hpc-poc/cmd/${PACKAGE}
 
 # Use the official Debian slim image for a lean production container.
 # https://hub.docker.com/_/debian
