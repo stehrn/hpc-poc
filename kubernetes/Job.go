@@ -42,6 +42,9 @@ func (c Client) CreateJob(options JobOptions) (*batchv1.Job, error) {
 		},
 		Spec: batchv1.JobSpec{
 			Template: apiv1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: options.Labels,
+				},
 				Spec: apiv1.PodSpec{
 					RestartPolicy: "Never",
 					Volumes: []apiv1.Volume{

@@ -1,6 +1,11 @@
 # Build and deployment process 
 
 * Set project name: `export PROJECT_NAME=<GCP project>`
+
+## Everything
+Run `bin/build_and_deploy.sh`
+
+## Individually
 * Set ${APP_NAME} & ${DOCKERFILE}:
 
 | APP_NAME     | DOCKERFILE       |
