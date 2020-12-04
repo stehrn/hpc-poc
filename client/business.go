@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/stehrn/hpc-poc/internal/utils"
 )
@@ -13,6 +14,12 @@ type Business string
 func BusinessFromEnv() Business {
 	business := utils.Env("BUSINESS_NAME")
 	return Business(business)
+}
+
+// BusinessNamesFromEnv get business names form env
+func BusinessNamesFromEnv() []string {
+	names := utils.Env("BUSINESS_NAMES")
+	return strings.Split(names, ",")
 }
 
 // TopicName derive name of topic

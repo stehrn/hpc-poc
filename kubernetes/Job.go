@@ -24,8 +24,8 @@ type JobOptions struct {
 }
 
 // ListJobs list all jobs
-func (c Client) ListJobs() (*batchv1.JobList, error) {
-	result, err := c.jobsClient().List(metav1.ListOptions{})
+func (c Client) ListJobs(options metav1.ListOptions) (*batchv1.JobList, error) {
+	result, err := c.jobsClient().List(options)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to list jobs")
 	}

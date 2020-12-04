@@ -7,18 +7,15 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/stehrn/hpc-poc/client"
 	http_common "github.com/stehrn/hpc-poc/internal/http"
-	"github.com/stehrn/hpc-poc/internal/utils"
 )
 
 var businessNames []string
 
 func init() {
-	names := utils.Env("BUSINESS_NAMES")
-	businessNames = strings.Split(names, ",")
+	businessNames = client.BusinessNamesFromEnv()
 }
 
 // templateData data to render into template

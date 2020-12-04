@@ -3,7 +3,7 @@
 * Set project name: `export PROJECT_NAME=<GCP project>`
 
 ## Everything
-Run `bin/build_and_deploy.sh`
+Run `./bin/build_and_deploy.sh`
 
 ## Individually
 * Set ${APP_NAME} & ${DOCKERFILE}:
@@ -27,7 +27,7 @@ gcloud container images list-tags gcr.io/${PROJECT_NAME}/${APP_NAME}
 ```
 
 ## Deploy
-If web based app, deply usiing:
+If web based app, run:
 ```
 kubectl apply -f cmd/${APP_NAME}/yaml
 kubectl get deployment ${APP_NAME} -o yaml 
@@ -37,10 +37,10 @@ Get port:
 ```
 kubectl get service ${APP_NAME}
 ```
-Open browswer at: http://<external-ip>:<port>/ (use port number on left hand side of ':')
+Open browswer at: http://`EXTERNAL-IP`:`PORT`/ (use port number on left hand side of ':')
 
 ## Monitor
-View logs
+View logs:
 ```
 kubectl logs --selector=app=${APP_NAME} --tail 100
 ``` 

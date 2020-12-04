@@ -12,10 +12,18 @@ import (
 
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/stehrn/hpc-poc/client"
 	http_common "github.com/stehrn/hpc-poc/internal/http"
 	k8 "github.com/stehrn/hpc-poc/kubernetes"
 )
+
+var businessNames []string
+
+func init() {
+	businessNames = client.BusinessNamesFromEnv()
+}
 
 type podSummary struct {
 	Name      string
@@ -69,8 +77,9 @@ func (j myJob) ContainerEnv() []apiv1.EnvVar {
 
 // summaryTemplate data to render into summary template
 type summaryTemplate struct {
-	Namespace string
-	Jobs      []jobSummary
+	Namespace     string
+	BusinessNames []string
+	Jobs          []jobSummary
 }
 
 type handlerContext struct {
@@ -89,11 +98,20 @@ func init() {
 }
 
 func (ctx *handlerContext) summary(w http.ResponseWriter, r *http.Request) error {
-	summary, err := summary(ctx.client)
-	if err != nil {
-		return fmt.Errorf("Error creating summary page: %v", err)
+	switch r.Method {
+	case "GET":
+		summary := summaryTemplate{
+			Namespace:     ctx.client.Namespace,
+			BusinessNames: businessNames}
+		ctx.summaryTemplate.Execute(w, summary)
+	case "POST":
+		business := r.FormValue("business")
+		summary, err := summary(business, ctx.client)
+		if err != nil {
+			return fmt.Errorf("Error creating summary page: %v", err)
+		}
+		ctx.summaryTemplate.Execute(w, summary)
 	}
-	ctx.summaryTemplate.Execute(w, summary)
 	return nil
 }
 
@@ -170,10 +188,11 @@ func loadTemplate(name string) *template.Template {
 	return template.Must(template.ParseFiles(myTemplate))
 }
 
-// https://gowalker.org/k8s.io/api/batch/v1#JobList
-func summary(client *k8.Client) (summaryTemplate, error) {
+// https://godoc.org/k8s.io/api/batch/v1
+func summary(business string, client *k8.Client) (summaryTemplate, error) {
 	var jobs []jobSummary
-	jobList, err := client.ListJobs()
+	options := metav1.ListOptions{LabelSelector: fmt.Sprintf("business=%s", business)}
+	jobList, err := client.ListJobs(options)
 	if err != nil {
 		return summaryTemplate{}, err
 	}
@@ -188,8 +207,9 @@ func summary(client *k8.Client) (summaryTemplate, error) {
 		jobs = append(jobs, job)
 	}
 	return summaryTemplate{
-		Namespace: client.Namespace,
-		Jobs:      jobs}, nil
+		Namespace:     client.Namespace,
+		BusinessNames: businessNames,
+		Jobs:          jobs}, nil
 }
 
 // Pod Status

@@ -20,5 +20,7 @@ spec:
           value: /app
         - name: NAMESPACE
           value: default
+        - name: BUSINESS_NAMES
+          value: bu1,bu2  
       serviceAccount: monitor
       serviceAccountName: monitor

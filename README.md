@@ -131,14 +131,16 @@ kubectl create secret generic pubsub-acc-key --from-file=key.json=${HOME}/key.js
 ```
 
 # Build and deploy containers
-Submit build to [cloud-build](https://cloud.google.com/cloud-build), which stores image in the [container-registry](https://cloud.google.com/container-registry); see [build-and-deploy](https://cloud.google.com/run/docs/quickstarts/build-and-deploy) quickstart.
+Submit build to [cloud-build](https://cloud.google.com/cloud-build), which stores image in the [container-registry](https://cloud.google.com/container-registry)
 
 [Build and deploy](BUILD_DEPLOY.md):
-* orchestrator
-* engine (*no deploy)
-* client
-* monitor
+* orchestrator (service)
+* engine (image only)
+* client (web app)
+* monitor (web app)
 
+Further reading: 
+* [build-and-deploy](https://cloud.google.com/run/docs/quickstarts/build-and-deploy) quickstart
 # Test
 ## Submit jobs
 Use web client or gcloud shell:
