@@ -2,7 +2,6 @@ package pubsub
 
 import (
 	"context"
-	"os"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/pkg/errors"
@@ -21,28 +20,30 @@ type Client struct {
 	*pubsub.Client
 }
 
-// NewClientFromEnvironment create Client
-func NewClientFromEnvironment() (*Client, error) {
-	return create(ConfigFromEnvironment())
-}
-
 // NewPubClient create new client for subscriptions
-func NewPubClient(config *ClientConfg) (*Client, error) {
-	if config.Project == "" {
-		return nil, errors.New("Missing project (PROJECT_NAME env variable)")
+func NewPubClient(project, topic string) (*Client, error) {
+	if project == "" {
+		return nil, errors.New("Missing project")
 	}
-	if config.TopicName == "" {
-		return nil, errors.New("Missing topics (TOPIC_NAME env variable)")
+	if topic == "" {
+		return nil, errors.New("Missing topic")
 	}
-	return create(config)
+	return create(&ClientConfg{
+		Project:   project,
+		TopicName: topic})
 }
 
 // NewSubClient create new client for subscriptions
-func NewSubClient(config *ClientConfg) (*Client, error) {
-	if config.TopicName == "" {
-		return nil, errors.New("Missing topics (TOPIC_NAME env variable)")
+func NewSubClient(project, subscription string) (*Client, error) {
+	if project == "" {
+		return nil, errors.New("Missing project")
 	}
-	return create(config)
+	if subscription == "" {
+		return nil, errors.New("Missing subscription")
+	}
+	return create(&ClientConfg{
+		Project:        project,
+		SubscriptionID: subscription})
 }
 
 func create(config *ClientConfg) (*Client, error) {
@@ -52,12 +53,4 @@ func create(config *ClientConfg) (*Client, error) {
 		return nil, errors.Wrapf(err, "Failed to create pubsub client (project %s)", config.Project)
 	}
 	return &Client{config, pubsubClient}, nil
-}
-
-// ConfigFromEnvironment create info from environment variables: PROJECT_NAME, SUBSCRIPTION_NAME, TOPIC_NAME
-func ConfigFromEnvironment() *ClientConfg {
-	return &ClientConfg{
-		Project:        os.Getenv("PROJECT_NAME"),
-		SubscriptionID: os.Getenv("SUBSCRIPTION_NAME"),
-		TopicName:      os.Getenv("TOPIC_NAME")}
 }

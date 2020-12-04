@@ -19,8 +19,8 @@ type Client struct {
 	clientSet *kubernetes.Clientset
 }
 
-// NewClient create Client
-func NewClient() (*Client, error) {
+// NewEnvClient create Client from environment
+func NewEnvClient() (*Client, error) {
 	namespace := os.Getenv("NAMESPACE")
 	if namespace == "" {
 		return nil, errors.New("Namspace required")

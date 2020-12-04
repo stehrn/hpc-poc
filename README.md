@@ -15,51 +15,72 @@
 
 # Overview 
 ## Flow
-* client 
+* `Client` submits a `Job`
   * write data to cloud storage bucket
   * publish message containing data location on cloud storage (bucket/object)
-* orchestrator 
-  * subscribes to subscription (`SUBSCRIPTION_NAME` env)
-    * on message - create kubernetes Job, passing it location of cloud storage data
-  * watches jobs
+* `Orchestrator` 
+  * subscribes to topic
+    * on message - create kubernetes/k8 job, passing it location of cloud storage data
+  * watches (k8) jobs
     * on job success - delete cloud storage object
-* engine
+* `Engine`
    * reads cloud storage data, does something with it, exits
 
+Terms:
+* `Client` - the thing submitting a `Job` (either the web client of driver app)
+* `Job` - a unit of work 
+  * can be broken down into tasks (for now  they represent same thing)
+  * submitted for a given `Business`
+  * contains data that is used by the `Engine`
+* `Business` - represents a given .. business (think desk)
+  * each will have its own cloud storage and topic
+* `Orchestrator` - handles a `Job` for given `Business`
+* `Engine` - the thing that computes something using the data in the `Job`'
+
+
 ## Web applications
- * client - submit data 
+ * client - use to submit data 
  * monitor - view jobs and pods (extend to view pubsub details)
 
-# Init gcloud
-Note, some of following commands require: `export PROJECT_NAME=<GCP project>`
+# Environment variables
+Following env variables reuiqred for setup:
+```
+export LOCATION=europe-west2
+export PROJECT_NAME=hpc-poc
+export CLIENT_NAME=client1
+export BUSINESS_NAME=bu1
+```
+GCP resource specific:
+```
+export CLOUD_STORAGE_BUCKET_NAME=${PROJECT_NAME}-bucket
+export GKE_CLUSTER_NAME=${PROJECT_NAME}-cluster
+```
 
+# Init gcloud
 ```
 gcloud config set project ${PROJECT_NAME}
 gcloud config set compute/zone europe-west2-a
 ```
 
-https://console.cloud.google.com
-
 # Create GKE 
 ```
-gcloud container clusters create hpc-poc --num-nodes=1
-gcloud container clusters get-credentials hpc-poc
+gcloud container clusters create ${GKE_CLUSTER_NAME} --num-nodes=1
+gcloud container clusters get-credentials ${GKE_CLUSTER_NAME}
 ```
 
 View workload in [console](https://console.cloud.google.com/kubernetes/workload/)
 
 # Create cloud storage bucket 
-Data will be written by client, read by engine, and deleted by orchestrator
+Data will be written by client, read by engine, and deleted by orchestrator. 
 ```
-gsutil mb -p ${PROJECT_NAME} -c STANDARD -l europe-west2 -b on gs://stehrn_hpc-poc
+gsutil mb -p ${PROJECT_NAME} -c STANDARD -l ${LOCATION} gs://${CLOUD_STORAGE_BUCKET_NAME}
 ```
-
-# Create (test) topic and subscription
+The object/data will be stored in a business specific subdirectory: `${CLOUD_STORAGE_BUCKET_NAME}/${BUSINESS_NAME}/`
+# Create topic and subscription (for given given business)
 ```
-gcloud pubsub topics create test-topic
-gcloud pubsub subscriptions create sub-test --topic=test-topic
+gcloud pubsub topics create ${PROJECT_NAME}-${BUSINESS_NAME}-topic
+gcloud pubsub subscriptions create ${PROJECT_NAME}-${BUSINESS_NAME}-subscription --topic=${PROJECT_NAME}-${BUSINESS_NAME}-topic
 ```
-The name of the subscription is passed into orchestrator container via `SUBSCRIPTION_NAME` env varible in [deployment.yaml](orchestrator/deployment.yaml)
 
 # Create GCP Service Accounts 
 ## Summary
@@ -78,20 +99,22 @@ Set up following:
 
 (see https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform)
 
+For now, roles are v broad and grouped together, so more work needed here
 ```
+export SERVICE_ACCOUNT=gke-sub-acc@hpc-poc.iam.gserviceaccount.com
+
 // create service sccount 
-gcloud iam service-accounts create gke-sub-acc@hpc-poc.iam.gserviceaccount.com --description="GKE subscription account" --display-name="gke-subscription"
+gcloud iam service-accounts create ${SERVICE_ACCOUNT} --description="GKE subscription account" --display-name="gke-subscription"
 gcloud iam service-accounts list
 
 // add roles
-gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/pubsub.subscriber 
-gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/pubsub.publisher
-gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/pubsub.viewer
-gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/storage.objectCreator
-gcloud projects add-iam-policy-binding hpc-poc --member=serviceAccount:gke-sub-acc@hpc-poc.iam.gserviceaccount.com --role=roles/storage.objectViewer
+gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/pubsub.subscriber 
+gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/pubsub.publisher
+gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/pubsub.viewer
+gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/storage.objectAdmin
 
 // list roles
-gcloud projects get-iam-policy hpc-poc --flatten="bindings[].members" --format='table(bindings.role)' --filter="bindings.members:gke-sub-acc@hpc-poc.iam.gserviceaccount.com"
+gcloud projects get-iam-policy ${PROJECT_NAME} --flatten="bindings[].members" --format='table(bindings.role)' --filter="bindings.members:${SERVICE_ACCOUNT}"
 ```
 
 * [storage iam-permissions](https://cloud.google.com/storage/docs/access-control/using-iam-permissions)
@@ -100,10 +123,9 @@ gcloud projects get-iam-policy hpc-poc --flatten="bindings[].members" --format='
 The key is injected into container env variable `GOOGLE_APPLICATION_CREDENTIALS` (also needed if running app locally)
 
 ```
-gcloud iam service-accounts keys create ${HOME}/key.json --iam-account gke-sub-acc@hpc-poc.iam.gserviceaccount.com 
+gcloud iam service-accounts keys create ${HOME}/key.json --iam-account ${SERVICE_ACCOUNT}
 kubectl create secret generic pubsub-acc-key --from-file=key.json=${HOME}/key.json
 ```
-...where path to download is location of key file.
 
 # Build and deploy containers
 Submit build to [cloud-build](https://cloud.google.com/cloud-build), which stores image in the [container-registry](https://cloud.google.com/container-registry); see [build-and-deploy](https://cloud.google.com/run/docs/quickstarts/build-and-deploy) quickstart.

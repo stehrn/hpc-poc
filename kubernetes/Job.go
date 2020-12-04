@@ -71,11 +71,11 @@ func (c Client) CreateJob(options JobOptions) (*batchv1.Job, error) {
 									Value: "/var/secrets/google/key.json",
 								},
 								{
-									Name:  "BUCKET_NAME",
+									Name:  "CLOUD_STORAGE_BUCKET_NAME",
 									Value: options.Bucket,
 								},
 								{
-									Name:  "OBJECT_NAME",
+									Name:  "CLOUD_STORAGE_OBJECT_NAME",
 									Value: options.Object,
 								},
 							},

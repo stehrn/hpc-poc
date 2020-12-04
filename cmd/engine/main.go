@@ -10,12 +10,12 @@ import (
 func main() {
 	log.Print("Starting Engine")
 
-	client, err := storage.NewClient()
+	client, err := storage.NewEnvClient()
 	if err != nil {
 		log.Fatalf("Could not create storage client: %v", err)
 	}
 
-	location := client.LocationFromEnvironment()
+	location := client.LocationFromEnv()
 	log.Printf("Loading data from cloud storage location (bucket/object) %v", location)
 	data, err := client.Download(location)
 	if err != nil {

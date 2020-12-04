@@ -5,7 +5,7 @@
 
 | APP_NAME     | DOCKERFILE       |
 |--------------|------------------|
-| orchestrator | DockerfileForWeb |
+| orchestrator | Dockerfile       |
 | engine       | Dockerfile       |
 | client       | DockerfileForWeb |
 | monitor      | DockerfileForWeb |

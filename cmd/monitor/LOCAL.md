@@ -5,7 +5,7 @@ Simple web app to view jobs and logs
 ```
 export NAMESPACE=default
 export KUBE_CONFIG=${HOME}/.kube/config
-cd monitor
+export PORT=8081
 go run main.go
 ```
 open http://localhost:8081/summary

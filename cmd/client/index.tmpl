@@ -15,12 +15,19 @@
     
     <h2>Client</h2>
     <p class="lead">
-        <h6>Project: <span class="badge badge-secondary">{{ .Pubsub.Project }}</span></h6>
-        <h6>Bucket: <span class="badge badge-secondary">{{ .Bucket }}</span></h6>
-        <h6>Topic: <span class="badge badge-secondary">{{ .Pubsub.TopicName }}</span></h6>
+        <h6>Project: <span class="badge badge-secondary">{{ .Project }}</span></h6>
     </p>
+
     <p class="lead">
-      <form method="POST" action="/client">     
+      <form method="POST" action="/client">    
+        <div class="form-group">
+          <label for="business">Business</label>
+          <select class="form-control" id="business" name="business">
+            {{ range .BusinessNames }}
+            <option>{{ . }}</option>
+            {{ end }}
+          </select>
+        </div>
         <div class="form-group">
         <label for="payload">Payload</label>
         <textarea class="form-control" id="payload" name="payload" rows="3"></textarea>
@@ -30,8 +37,8 @@
     </p>
     <p>On submit: 
        <ul>
-        <li>Payload will be uploaded to cloud storage bucket <span class="badge badge-secondary">{{ .Bucket }}</span></li>
-        <li>A message with location of bucket object will be published to topic <span class="badge badge-secondary">{{ .Pubsub.TopicName }}</span></li>
+        <li>Payload will be uploaded to cloud storage (base) bucket <span class="badge badge-secondary">{{ .Storage.BucketName }}</span></li>
+        <li>A message with location of bucket object will be published to topic derived off business</span></li>
        </ul>
     </p>
     {{if .Message }}

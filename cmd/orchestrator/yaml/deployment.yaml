@@ -24,13 +24,17 @@ spec:
           mountPath: /var/secrets/google
         env:
         - name: NAMESPACE
-          value: default  
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /var/secrets/google/key.json
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: BUSINESS_NAME
+          value: bu1
         - name: PROJECT_NAME
           value: hpc-poc
-        - name: SUBSCRIPTION_NAME
-          value: sub-test
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
+        - name: CLOUD_STORAGE_BUCKET_NAME
+          value: hpc-poc-bucket  
         - name: ENGINE_IMAGE
           value: "gcr.io/hpc-poc/engine:latest"  
       serviceAccount: job-engine

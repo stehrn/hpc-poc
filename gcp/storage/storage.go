@@ -7,22 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"time"
-
-	"github.com/stehrn/hpc-poc/internal/utils"
 )
-
-// Location location of payload
-type Location struct {
-	Bucket string `json:"bucket"`
-	Object string `json:"object"`
-}
-
-// LocationFromEnvironment  derive location from environment
-func (c Client) LocationFromEnvironment() Location {
-	bucket := utils.Env("BUCKET_NAME")
-	object := utils.Env("OBJECT_NAME")
-	return Location{bucket, object}
-}
 
 // Upload upload object to Cloud Storage bucket
 func (c Client) Upload(location Location, content []byte) error {
@@ -65,8 +50,6 @@ func (c Client) Download(location Location) ([]byte, error) {
 // Delete delete object at given location
 func (c Client) Delete(location Location) error {
 	ctx := context.Background()
-
-	defer c.Close()
 
 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 	defer cancel()

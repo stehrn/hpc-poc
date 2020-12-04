@@ -5,14 +5,9 @@ TODO:
 * jobs and pods accumulate - when to delete?
   * If we delete them, we lose engine logs
 * write test harness to submit lots of jobs  
-* sort out main package name in client package
 * add proper client interface/API
 * Dont create too mant topics
+* Define cutom roles https://cloud.google.com/iam/docs/creating-custom-roles#iam-custom-roles-testable-permissions-gcloud
+* add check that sub exists
 
 Look into quotas: https://cloud.google.com/kubernetes-engine/quotas
-
-
-github.com/googleapis/gnostic/OpenAPIv2
-
-
-

@@ -7,16 +7,25 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/stehrn/hpc-poc/client"
-	"github.com/stehrn/hpc-poc/gcp/pubsub"
+	http_common "github.com/stehrn/hpc-poc/internal/http"
 	"github.com/stehrn/hpc-poc/internal/utils"
 )
+
+var businessNames []string
+
+func init() {
+	names := utils.Env("BUSINESS_NAMES")
+	businessNames = strings.Split(names, ",")
+}
 
 // templateData data to render into template
 type templateData struct {
 	*client.Client
-	Message string
+	BusinessNames []string
+	Message       string
 }
 
 type handlerContext struct {
@@ -25,16 +34,7 @@ type handlerContext struct {
 }
 
 func (ctx handlerContext) templateData(message string) *templateData {
-	return &templateData{ctx.client, message}
-}
-
-func errorHandler(f func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		err := f(w, r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	}
+	return &templateData{ctx.client, businessNames, message}
 }
 
 func (ctx *handlerContext) handle(w http.ResponseWriter, r *http.Request) error {
@@ -46,13 +46,15 @@ func (ctx *handlerContext) handle(w http.ResponseWriter, r *http.Request) error 
 			return fmt.Errorf("ParseForm() err: %v", err)
 		}
 
+		business := client.Business(r.FormValue("business"))
 		data := []byte(r.FormValue("payload"))
-		location, id, err := ctx.client.Handle(data)
+		location, id, err := ctx.client.Handle(business, data)
 		if err != nil {
 			return fmt.Errorf("client.handle() err: %v", err)
 		}
 
-		message := fmt.Sprintf("Payload uploaded to cloud storage location: %s, notification sent with message ID: %s", location, id)
+		topic := business.TopicName(ctx.client.Project)
+		message := fmt.Sprintf("Data uploaded to cloud storage location: %s, notification sent to topic: '%s', message ID: %s", location, topic, id)
 		log.Print(message)
 		ctx.template.Execute(w, ctx.templateData(message))
 	}
@@ -66,32 +68,20 @@ func main() {
 	clientTemplate := filepath.Join(templatePath, "./index.tmpl")
 	log.Printf("Loading template from: %s", clientTemplate)
 
-	bucket := utils.Env("BUCKET_NAME")
-	client, err := client.NewClient(bucket, pubsub.ConfigFromEnvironment())
-	if err != nil {
-		log.Fatalf("Could not create client: %v", err)
-	}
-
+	client := client.NewEnvClientOrFatal()
 	ctx := &handlerContext{
 		client:   client,
 		template: template.Must(template.ParseFiles(clientTemplate))}
 
-	http.HandleFunc("/client", errorHandler(ctx.handle))
+	handler := http_common.ErrorHandler(ctx.handle)
+	http.HandleFunc("/", handler)
+	http.HandleFunc("/client", handler)
 
-	port := port()
-	log.Printf("Client created for project: %s, topic: %s, bucket: %s; listening on port %s",
-		client.Pubsub.Project, client.Pubsub.TopicName, bucket, port)
+	port := http_common.Port()
+	log.Printf("Client created for project: %s, business names: %v, bucket: %s; listening on port %s",
+		client.Project, businessNames, client.Storage.BucketName, port)
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func port() string {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8082"
-		log.Printf("Defaulting to port %s", port)
-	}
-	return port
 }

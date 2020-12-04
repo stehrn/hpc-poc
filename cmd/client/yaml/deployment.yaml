@@ -27,12 +27,12 @@ spec:
           value: hpc-poc
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /var/secrets/google/key.json
-        - name: TOPIC_NAME
-          value: test-topic
-        - name: BUCKET_NAME
-          value: stehrn_hpc-poc
+        - name: CLOUD_STORAGE_BUCKET_NAME
+          value: hpc-poc-bucket
         - name: TEMPLATE_PATH
           value: /app
+        - name: BUSINESS_NAMES
+          value: bu1,bu2
         
 
 

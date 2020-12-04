@@ -16,10 +16,10 @@ func (c Client) Publish(payload []byte) (string, error) {
 	topic := c.Topic(c.TopicName)
 	ok, err := topic.Exists(ctx)
 	if err != nil {
-		return "", errors.Wrapf(err, "Failed to find out if topic %s exists", c.Topic)
+		return "", errors.Wrapf(err, "Failed to find out if topic %s exists", c.TopicName)
 	}
 	if !ok {
-		return "", errors.Errorf("Topic %s does not exist", c.Topic)
+		return "", errors.Errorf("Topic %s does not exist", c.TopicName)
 	}
 
 	defer topic.Stop()

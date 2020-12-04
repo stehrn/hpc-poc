@@ -13,6 +13,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 
+	http_common "github.com/stehrn/hpc-poc/internal/http"
 	k8 "github.com/stehrn/hpc-poc/kubernetes"
 )
 
@@ -87,15 +88,6 @@ func init() {
 	}
 }
 
-func errorHandler(f func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		err := f(w, r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	}
-}
-
 func (ctx *handlerContext) summary(w http.ResponseWriter, r *http.Request) error {
 	summary, err := summary(ctx.client)
 	if err != nil {
@@ -152,7 +144,7 @@ func (ctx *handlerContext) logs(w http.ResponseWriter, r *http.Request) error {
 func main() {
 	log.Print("Starting monitor")
 
-	client, err := k8.NewClient()
+	client, err := k8.NewEnvClient()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -161,26 +153,18 @@ func main() {
 		summaryTemplate: loadTemplate("./summary.tmpl"),
 		jobTemplate:     loadTemplate("./job.tmpl")}
 
-	http.HandleFunc("/summary", errorHandler(ctx.summary))
-	http.HandleFunc("/job/", errorHandler(ctx.job))
-	http.HandleFunc("/logs/", errorHandler(ctx.logs))
+	summary := http_common.ErrorHandler(ctx.summary)
+	http.HandleFunc("/", summary)
+	http.HandleFunc("/summary", summary)
+	http.HandleFunc("/job/", http_common.ErrorHandler(ctx.job))
+	http.HandleFunc("/logs/", http_common.ErrorHandler(ctx.logs))
 
-	port := port()
+	port := http_common.Port()
 	log.Printf("Monitor service Listening on port %s", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
 }
-
-func port() string {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8081"
-		log.Printf("Defaulting to port %s", port)
-	}
-	return port
-}
-
 func loadTemplate(name string) *template.Template {
 	myTemplate := filepath.Join(templatePath, name)
 	return template.Must(template.ParseFiles(myTemplate))

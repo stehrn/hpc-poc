@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"log"
+	"strings"
 
 	"cloud.google.com/go/pubsub"
 	batchv1 "k8s.io/api/batch/v1"
 
+	"github.com/stehrn/hpc-poc/client"
 	messaging "github.com/stehrn/hpc-poc/gcp/pubsub"
 	"github.com/stehrn/hpc-poc/gcp/storage"
 	"github.com/stehrn/hpc-poc/internal/utils"
@@ -16,15 +18,19 @@ import (
 func main() {
 	log.Print("Starting orchestrator")
 
-	k8Client, err := k8.NewClient()
+	k8Client, err := k8.NewEnvClient()
 	if err != nil {
 		log.Fatalf("Could not create k8 client: %v", err)
 	}
-	pubsubClient, err := messaging.NewClientFromEnvironment()
+
+	project := utils.Env("PROJECT_NAME")
+	business := client.BusinessFromEnv()
+	subscription := business.SubscriptionName(project)
+	subClient, err := messaging.NewSubClient(project, subscription)
 	if err != nil {
-		log.Fatalf("Could not create gcp pubsub client: %v", err)
+		log.Fatalf("Could not create gcp sub client: %v", err)
 	}
-	storageClient, err := storage.NewClient()
+	storageClient, err := storage.NewEnvClient()
 	if err != nil {
 		log.Fatalf("Could not create gcp storage client: %v", err)
 	}
@@ -49,7 +55,7 @@ func main() {
 		log.Fatal("Could not start watching jobs", err)
 	}
 
-	err = pubsubClient.Subscribe(func(ctx context.Context, m *pubsub.Message) {
+	err = subClient.Subscribe(func(ctx context.Context, m *pubsub.Message) {
 		location, err := storage.ToLocation(m.Data)
 		if err != nil {
 			log.Printf("Could not get location from message data (%v), error: %v", m.Data, err)
@@ -59,7 +65,7 @@ func main() {
 		options := k8.JobOptions{
 			Name:     "engine-job-" + m.ID,
 			Image:    engineImage,
-			Labels:   labels(k8Client, pubsubClient, location, m.ID),
+			Labels:   labels(business, k8Client, subClient, location, m.ID),
 			Location: location}
 
 		log.Printf("Creating Job with options: %v", options)
@@ -68,8 +74,6 @@ func main() {
 			log.Printf("Could not create job with options: %v, error: %v", options, err)
 			return
 		}
-
-		// TODO: decide what to do if we can't create a job, keep message on q?
 		m.Ack()
 	})
 
@@ -78,13 +82,18 @@ func main() {
 	}
 }
 
-func labels(k8Client *k8.Client, pubsubClient *messaging.Client, location storage.Location, messageID string) map[string]string {
+func labels(business client.Business, k8Client *k8.Client, pubsubClient *messaging.Client, location storage.Location, messageID string) map[string]string {
 	labels := make(map[string]string)
+	labels["business"] = string(business)
 	labels["k8.namespace"] = k8Client.Namespace
 	labels["gcp.storage.bucket"] = location.Bucket
-	labels["gcp.storage.object"] = location.Object
+	labels["gcp.storage.object"] = clean(location.Object)
 	labels["gcp.pubsub.project"] = pubsubClient.Project
 	labels["gcp.pubsub.subscription"] = pubsubClient.SubscriptionID
 	labels["gcp.pubsub.subscription_id"] = messageID
 	return labels
+}
+
+func clean(item string) string {
+	return strings.ReplaceAll(item, "/", "_")
 }
