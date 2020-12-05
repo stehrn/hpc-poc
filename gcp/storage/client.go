@@ -18,6 +18,9 @@ type Client struct {
 // NewEnvClient create new storage client from env
 func NewEnvClient() (*Client, error) {
 	bucketName := os.Getenv("CLOUD_STORAGE_BUCKET_NAME")
+	if bucketName == "" {
+		return &Client{}, errors.New("storage.NewEnvClient: env CLOUD_STORAGE_BUCKET_NAME blank")
+	}
 	return NewClient(bucketName)
 }
 

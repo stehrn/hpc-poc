@@ -1,7 +1,9 @@
 # Engine container
-A simple engine that downloads an object from GCP cloud storage bucket, prints it out, and exits.
+A simple engine for testing that downloads an object from GCP cloud storage bucket, prints it out, and exits.
 
-Image is referenced in [orchestrator](../orchestrator/README.md) deployment (`ENGINE_IMAGE`)
+Send it a `PANIC` message, and it crashes.
+
+Image is referenced in orchestrator deployment (`ENGINE_IMAGE`)
 
 The engine itself requires the following env variables:
 * `CLOUD_STORAGE_BUCKET_NAME` 

@@ -12,10 +12,21 @@ spec:
       labels:
         app: monitor
     spec:
+      volumes:
+        - name: google-cloud-key
+          secret:
+            secretName: pubsub-acc-key
       containers:
       - name: monitor
         image: gcr.io/hpc-poc/monitor:latest
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
         env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
+        - name: CLOUD_STORAGE_BUCKET_NAME
+          value: hpc-poc-bucket
         - name: TEMPLATE_PATH
           value: /app
         - name: NAMESPACE

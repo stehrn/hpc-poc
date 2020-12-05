@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Monitor (Jobs)</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </head>
+  <body>
+
+  <div class="container-fluid">
+  <div class="row">
+    <div class="col-sm bg-light">
+
+    <h2>Monitor (Buckets)</h2>    
+    <p class="lead">
+        <h6>Business: <span class="badge badge-secondary">{{ .Business }}</span></h6>
+        <h6>Bucket: <span class="badge badge-secondary">{{ .Bucket }}</span></h6>
+    </p>
+
+    <div class="row">
+     <div class="col-sm bg-light">
+      <p class="lead">
+      <h4>Objects</h4>
+      <table class="table table-bordered table-sm">
+        <thead class="thead-light">
+      	<tr>
+          <th scope="col">Object</td>
+          <th scope="col">Size</td>
+          <th scope="col">Created</td>
+        </tr>
+      </thead>
+      <tbody>
+      	{{ with .Objects }}
+			  {{ range . }}
+      	  <tr>
+            <td>{{ .Object }}</td>
+            <td>{{ .Size }}</td>
+            <td>{{ .Created }}</td>
+          </tr>
+        {{ end }} 
+      	{{ end }}
+      </tbody>
+      </table>
+      </p>  
+     </div>
+    </div>
+
+    </div>
+
+  </div>
+  </div>
+</body>
+</html>

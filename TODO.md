@@ -11,3 +11,8 @@ TODO:
 * add check that sub exists
 
 Look into quotas: https://cloud.google.com/kubernetes-engine/quotas
+
+
+
+
+Create many Jobs in a batch might place high load on the Kubernetes control plane

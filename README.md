@@ -14,6 +14,7 @@
   * View activity
 
 # Overview 
+
 ## Flow
 * `Client` submits a `Job`
   * write data to cloud storage bucket
@@ -100,6 +101,10 @@ Set up following:
 * Engine:
   * read storage objects [`storage.objectViewer`]
 
+* Monitor:
+  * read storage objects [`storage.objectViewer`]
+
+
 (see [authenticating-to-cloud-platform](https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform))
 
 For now, roles are v broad and grouped together, so more work needed here
@@ -155,3 +160,6 @@ gcloud pubsub topics publish ${TOPIC_NAME} --message="engine payload 1"
 ```
 kubectl logs --selector=app=orchestrator --tail 100
 ```
+
+List buckets:
+gsutil ls -r gs://${CLOUD_STORAGE_BUCKET_NAME}/${BUSINESS_NAME}

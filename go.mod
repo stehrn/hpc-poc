@@ -8,6 +8,7 @@ require (
 	cloud.google.com/go/storage v1.10.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/xid v1.2.1
+	google.golang.org/api v0.35.0
 	k8s.io/api v0.16.13
 	k8s.io/apimachinery v0.16.13
 	k8s.io/client-go v0.16.13

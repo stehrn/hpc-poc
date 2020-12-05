@@ -7,7 +7,40 @@ import (
 	"io"
 	"io/ioutil"
 	"time"
+
+	"cloud.google.com/go/storage"
 )
+
+// List list contents of bucket
+// equivallent to: gsutil ls -r gs://c.BucketName/prefix**
+func (c Client) List(prefix string) *storage.ObjectIterator {
+
+	ctx := context.Background()
+
+	// ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+	// defer cancel()
+
+	var query *storage.Query
+	if prefix != "" {
+		query = &storage.Query{Prefix: prefix}
+	}
+	return c.Bucket(c.BucketName).Objects(ctx, query)
+
+	// for {
+	// 	attrs, err := it.Next()
+	// 	if err == iterator.Done {
+	// 		break
+	// 	}
+	// 	if err != nil {
+	// 		fmt.Printf("Bucket(%q).Objects: %v", c.BucketName, err)
+	// 		return nil
+	// 	}
+	// 	fmt.Fprintln(w, attrs.Name)
+	// }
+
+	// return nil
+
+}
 
 // Upload upload object to Cloud Storage bucket
 func (c Client) Upload(location Location, content []byte) error {
