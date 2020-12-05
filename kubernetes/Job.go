@@ -97,16 +97,10 @@ func (c Client) CreateJob(options JobOptions) (*batchv1.Job, error) {
 }
 
 // Watch watch jobs
-func (c Client) Watch(jobSucceeded func(job *batchv1.Job)) error {
-
-	label := ""
-	watch, err := c.jobsClient().Watch(metav1.ListOptions{})
-	// TODO: add specific label
-	// metav1.ListOptions{
-	// 	LabelSelector: label,
-	// }
+func (c Client) Watch(filter metav1.ListOptions, jobSucceeded func(job *batchv1.Job)) error {
+	watch, err := c.jobsClient().Watch(filter)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to watch jobs with label: '%s'", label)
+		return errors.Wrapf(err, "Failed to watch jobs with filter: '%v'", filter)
 	}
 	go func() {
 		for event := range watch.ResultChan() {

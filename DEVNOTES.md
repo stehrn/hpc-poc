@@ -15,7 +15,6 @@ https://console.cloud.google.com
 
 ## Deploy to Cloud Run
 ```
-gcloud run deploy --image gcr.io/hpc-poc/monitor --platform managed
 ```
 
 ## Go specific build
