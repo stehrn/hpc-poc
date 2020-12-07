@@ -64,7 +64,7 @@ func startJobWatcher() {
 	err = k8Client.Watch(options, kubernetes.SUCCESS, func(job *batchv1.Job) {
 		location := storage.Location{
 			Bucket: job.Labels["gcp.storage.bucket"],
-			Object: job.Labels["gcp.storage.object"],
+			Object: reverseClean(job.Labels["gcp.storage.object"]),
 		}
 		log.Printf("Deleting cloud storage data at location: %v", location)
 		err = storageClient.Delete(location)
@@ -122,4 +122,8 @@ func labels(location storage.Location, messageID string) map[string]string {
 
 func clean(item string) string {
 	return strings.ReplaceAll(item, "/", "_")
+}
+
+func reverseClean(item string) string {
+	return strings.ReplaceAll(item, "_", "/")
 }

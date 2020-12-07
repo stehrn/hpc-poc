@@ -9,7 +9,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// LatestPod get loatest pod
+// PodStatus represents status of (last) pod in Job
+type PodStatus struct {
+	Condition apiv1.PodCondition
+	IsError   bool
+}
+
+// LatestPod get latest pod
 func (c Client) LatestPod(jobName string) (apiv1.Pod, error) {
 	pods, err := c.Pods(jobName)
 	if err != nil {
@@ -63,4 +69,25 @@ func (c Client) LogsForJob(jobName string) (string, error) {
 		return "", errors.Wrapf(err, "Failed to load logs for job '%s'", jobName)
 	}
 	return log, nil
+}
+
+// NewPodStatus create new NewPodStatus from pod
+func NewPodStatus(pod apiv1.Pod) PodStatus {
+	if pod.Name != "" {
+		conditions := pod.Status.Conditions
+		if len(conditions) != 0 {
+			condition := conditions[0]
+			var jobError bool
+			if condition.Reason == "Unschedulable" {
+				jobError = true
+			}
+			return PodStatus{condition, jobError}
+		}
+	}
+	return EmptyPodStatus()
+}
+
+// EmptyPodStatus create EmptyPodStatus
+func EmptyPodStatus() PodStatus {
+	return PodStatus{apiv1.PodCondition{}, false}
 }

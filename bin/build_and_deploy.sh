@@ -1,17 +1,25 @@
+#!/bin/bash 
+
+# submit to gcp cloud build 
+function build {
+    package=$1 
+    dockerfile=$2
+    echo "building ${package} using ${dockerfile}"
+
+    gcloud builds submit --config=cloudbuild.yaml --substitutions=_PROJECT=${PROJECT_NAME},_PACKAGE=${package},_DOCKERFILE=${dockerfile} .
+
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+        echo "Error: $retVal"
+    fi
+}
 
 # build and deploy everything
 
-echo "building orchestrator"
-gcloud builds submit --config=cloudbuild.yaml --substitutions=_PROJECT=${PROJECT_NAME},_PACKAGE=orchestrator,_DOCKERFILE=Dockerfile .
-
-echo "building engine"
-gcloud builds submit --config=cloudbuild.yaml --substitutions=_PROJECT=${PROJECT_NAME},_PACKAGE=engine,_DOCKERFILE=Dockerfile .
-
-echo "building client"
-gcloud builds submit --config=cloudbuild.yaml --substitutions=_PROJECT=${PROJECT_NAME},_PACKAGE=client,_DOCKERFILE=DockerfileForWeb .
-
-echo "building monitor"
-gcloud builds submit --config=cloudbuild.yaml --substitutions=_PROJECT=${PROJECT_NAME},_PACKAGE=monitor,_DOCKERFILE=DockerfileForWeb .
+build orchestrator Dockerfile
+build engine Dockerfile
+build client DockerfileForWeb
+build monitor DockerfileForWeb
 
 echo "deploying orchestrator"
 kubectl apply -f cmd/orchestrator/yaml
@@ -21,3 +29,5 @@ kubectl apply -f cmd/client/yaml
 
 echo "deploying monitor"
 kubectl apply -f cmd/monitor/yaml
+  
+exit $?

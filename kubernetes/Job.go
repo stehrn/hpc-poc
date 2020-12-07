@@ -23,12 +23,6 @@ type JobOptions struct {
 	storage.Location
 }
 
-// PodStatus represents status of (last) pod in Job
-type PodStatus struct {
-	Condition apiv1.PodCondition
-	IsError   bool
-}
-
 // ListJobs list all jobs
 func (c Client) ListJobs(options metav1.ListOptions) (*batchv1.JobList, error) {
 	result, err := c.jobsClient().List(options)
@@ -158,20 +152,9 @@ func Status(status batchv1.JobStatus) string {
 
 // LastPodStatus get status of last Pod in Job
 func (c Client) LastPodStatus(job string) (PodStatus, error) {
-	pods, err := c.Pods(job)
+	pod, err := c.LatestPod(job)
 	if err != nil {
 		return PodStatus{}, err
 	}
-	if len(pods) != 0 {
-		conditions := pods[0].Status.Conditions
-		if len(conditions) != 0 {
-			condition := conditions[0]
-			var jobError bool
-			if condition.Reason == "Unschedulable" {
-				jobError = true
-			}
-			return PodStatus{condition, jobError}, nil
-		}
-	}
-	return PodStatus{apiv1.PodCondition{}, false}, nil
+	return NewPodStatus(pod), nil
 }

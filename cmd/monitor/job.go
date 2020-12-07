@@ -7,6 +7,8 @@ import (
 
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
+
+	k8 "github.com/stehrn/hpc-poc/kubernetes"
 )
 
 // so we can add our own methods
@@ -18,11 +20,6 @@ type myJob struct {
 type jobsTemplate struct {
 	Job  myJob
 	Pods []apiv1.Pod
-}
-
-type lastPod struct {
-	Condition apiv1.PodCondition
-	IsError   bool
 }
 
 func (ctx *handlerContext) JobHandler(w http.ResponseWriter, r *http.Request) error {
@@ -46,19 +43,11 @@ func (ctx *handlerContext) JobHandler(w http.ResponseWriter, r *http.Request) er
 }
 
 // called from job.tmpl
-func (j jobsTemplate) LastPod() lastPod {
+func (j jobsTemplate) LastPod() k8.PodStatus {
 	if len(j.Pods) != 0 {
-		conditions := j.Pods[0].Status.Conditions
-		if len(conditions) != 0 {
-			condition := conditions[0]
-			var jobError bool
-			if condition.Reason == "Unschedulable" {
-				jobError = true
-			}
-			return lastPod{condition, jobError}
-		}
+		return k8.NewPodStatus(j.Pods[0])
 	}
-	return lastPod{apiv1.PodCondition{}, false}
+	return k8.EmptyPodStatus()
 }
 
 // called from job.tmpl

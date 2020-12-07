@@ -27,7 +27,7 @@ var k8Client *kubernetes.Client
 //
 // Example usage when running locally:
 //
-// go run client_test_driver.go -business=bu1 --project=hpc-poc --bucket=hpc-poc-bucket --namespace=default --numJobs=3
+// go run client_test_driver.go -business=bu1 --project=hpc-poc --bucket=hpc-poc-bucket --namespace=default --session=session-a --numJobs=3
 //
 func main() {
 
@@ -35,10 +35,12 @@ func main() {
 	project := flag.String("project", "", "name of GCP project")
 	bucket := flag.String("bucket", "", "name of GCP cloud storage bucket")
 	namespace := flag.String("namespace", "", "name of kubernetes namespace")
+	sessionID := flag.String("session", "", "ID of session")
 	numJobs := flag.Int("numJobs", 0, "number of jobs to create")
 	flag.Parse()
 
-	log.Printf("Following args passed in:\nbusiness: %q\nproject: %q\nbucket: %q\nnumJobs: %d", *business, *project, *bucket, *numJobs)
+	log.Printf("Following args passed in:\nbusiness: %q\nproject: %q\nbucket: %q\nnamespace: %q\nsessionID: %q\nnumJobs: %d",
+		*business, *project, *bucket, *namespace, *sessionID, *numJobs)
 	fmt.Println("Press the Enter Key to start")
 	fmt.Scanln()
 

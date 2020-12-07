@@ -161,5 +161,28 @@ gcloud pubsub topics publish ${TOPIC_NAME} --message="engine payload 1"
 kubectl logs --selector=app=orchestrator --tail 100
 ```
 
-List buckets:
+### List buckets:
+```
 gsutil ls -r gs://${CLOUD_STORAGE_BUCKET_NAME}/${BUSINESS_NAME}
+```
+
+### List jobs for given business:
+```
+kubectl get jobs -l business=${BUSINESS_NAME}
+```
+### List succesful jobs for given business:
+```
+kubectl get jobs -l business=${BUSINESS_NAME} --field-selector status.successful=1 
+```
+(or failed: `--field-selector status.successful=0`)
+
+
+# Cleaup
+In case you need to manually clear stuff down:
+```
+kubectl delete jobs --all
+kubectl delete pods --all
+gsutil rm gs://${CLOUD_STORAGE_BUCKET_NAME}/${BUSINESS_NAME}/*
+
+```
+
