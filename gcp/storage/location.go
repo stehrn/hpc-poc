@@ -20,6 +20,13 @@ func (c Client) Location(business string) Location {
 		Object: objectName(business, uniqueID())}
 }
 
+// LocationForObject generate storage bucket location for existing object
+func (c Client) LocationForObject(object string) Location {
+	return Location{
+		Bucket: c.BucketName,
+		Object: object}
+}
+
 // LocationFromEnv derive location from environment
 func (c Client) LocationFromEnv() Location {
 	bucket := utils.Env("CLOUD_STORAGE_BUCKET_NAME")

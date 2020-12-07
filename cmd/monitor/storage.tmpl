@@ -35,7 +35,7 @@
       	{{ with .Objects }}
 			  {{ range . }}
       	  <tr>
-            <td>{{ .Object }}</td>
+            <td><a href="/bucket/object/{{ .Object }}">{{ .Object }}</a></td>
             <td>{{ .Size }}</td>
             <td>{{ .Created }}</td>
           </tr>
