@@ -3,6 +3,8 @@ package client
 import (
 	"log"
 
+	"github.com/pkg/errors"
+
 	"github.com/stehrn/hpc-poc/gcp/pubsub"
 	"github.com/stehrn/hpc-poc/gcp/storage"
 	"github.com/stehrn/hpc-poc/internal/utils"
@@ -18,20 +20,26 @@ type Client struct {
 
 // NewEnvClientOrFatal create new client from env
 func NewEnvClientOrFatal() *Client {
-	bucket := utils.Env("CLOUD_STORAGE_BUCKET_NAME")
 	project := utils.Env("PROJECT_NAME")
-	client, err := newClient(project, bucket)
+	bucket := utils.Env("CLOUD_STORAGE_BUCKET_NAME")
+	client, err := NewClient(project, bucket)
 	if err != nil {
 		log.Fatalf("Could not create client: %v", err)
 	}
 	return client
 }
 
-// newClient create Client
-func newClient(project, bucket string) (*Client, error) {
+// NewClient create Client
+func NewClient(project, bucket string) (*Client, error) {
+	if project == "" {
+		return nil, errors.New("Missing project")
+	}
+	if bucket == "" {
+		return nil, errors.New("Missing bucket")
+	}
 	storageClient, err := storage.NewClient(bucket)
 	if err != nil {
-		log.Fatalf("Could not create storage client: %v", err)
+		return nil, err
 	}
 	return &Client{project, storageClient}, nil
 }

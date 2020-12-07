@@ -14,6 +14,7 @@ import (
 	messaging "github.com/stehrn/hpc-poc/gcp/pubsub"
 	"github.com/stehrn/hpc-poc/gcp/storage"
 	"github.com/stehrn/hpc-poc/internal/utils"
+	"github.com/stehrn/hpc-poc/kubernetes"
 	k8 "github.com/stehrn/hpc-poc/kubernetes"
 )
 
@@ -60,7 +61,7 @@ func startJobWatcher() {
 	}
 
 	options := metav1.ListOptions{LabelSelector: fmt.Sprintf("business=%s", string(business))}
-	err = k8Client.Watch(options, func(job *batchv1.Job) {
+	err = k8Client.Watch(options, kubernetes.SUCCESS, func(job *batchv1.Job) {
 		location := storage.Location{
 			Bucket: job.Labels["gcp.storage.bucket"],
 			Object: job.Labels["gcp.storage.object"],

@@ -23,6 +23,12 @@ type JobOptions struct {
 	storage.Location
 }
 
+// PodStatus represents status of (last) pod in Job
+type PodStatus struct {
+	Condition apiv1.PodCondition
+	IsError   bool
+}
+
 // ListJobs list all jobs
 func (c Client) ListJobs(options metav1.ListOptions) (*batchv1.JobList, error) {
 	result, err := c.jobsClient().List(options)
@@ -97,7 +103,7 @@ func (c Client) CreateJob(options JobOptions) (*batchv1.Job, error) {
 }
 
 // Watch watch jobs
-func (c Client) Watch(filter metav1.ListOptions, jobSucceeded func(job *batchv1.Job)) error {
+func (c Client) Watch(filter metav1.ListOptions, predicate func(status batchv1.JobStatus) bool, callback func(job *batchv1.Job)) error {
 	watch, err := c.jobsClient().Watch(filter)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to watch jobs with filter: '%v'", filter)
@@ -108,12 +114,22 @@ func (c Client) Watch(filter metav1.ListOptions, jobSucceeded func(job *batchv1.
 			if !ok {
 				log.Panicf("Unexpected type: '%v'", event.Type)
 			}
-			if job.Status.Succeeded == 1 {
-				jobSucceeded(job)
+			if predicate(job.Status) {
+				callback(job)
 			}
 		}
 	}()
 	return nil
+}
+
+// SUCCESS return true is job succesful
+func SUCCESS(status batchv1.JobStatus) bool {
+	return status.Succeeded == 1
+}
+
+// ANY just always return true, regardless of status
+func ANY(status batchv1.JobStatus) bool {
+	return true
 }
 
 // Job load job from job name
@@ -138,4 +154,24 @@ func Status(status batchv1.JobStatus) string {
 		return "Failed"
 	}
 	return "Unkonwn"
+}
+
+// LastPodStatus get status of last Pod in Job
+func (c Client) LastPodStatus(job string) (PodStatus, error) {
+	pods, err := c.Pods(job)
+	if err != nil {
+		return PodStatus{}, err
+	}
+	if len(pods) != 0 {
+		conditions := pods[0].Status.Conditions
+		if len(conditions) != 0 {
+			condition := conditions[0]
+			var jobError bool
+			if condition.Reason == "Unschedulable" {
+				jobError = true
+			}
+			return PodStatus{condition, jobError}, nil
+		}
+	}
+	return PodStatus{apiv1.PodCondition{}, false}, nil
 }

@@ -21,7 +21,11 @@ type Client struct {
 
 // NewEnvClient create Client from environment
 func NewEnvClient() (*Client, error) {
-	namespace := os.Getenv("NAMESPACE")
+	return NewClient(os.Getenv("NAMESPACE"))
+}
+
+// NewClient create new client
+func NewClient(namespace string) (*Client, error) {
 	if namespace == "" {
 		return nil, errors.New("Namspace required")
 	}
