@@ -9,10 +9,12 @@ TODO:
 * Dont create too mant topics
 * Define cutom roles https://cloud.google.com/iam/docs/creating-custom-roles#iam-custom-roles-testable-permissions-gcloud
 * add check that sub exists
+* show events  
 
 Look into quotas: https://cloud.google.com/kubernetes-engine/quotas
 
-
-
-
 Create many Jobs in a batch might place high load on the Kubernetes control plane
+
+
+build engine_storage Dockerfile
+build engine_subscription Dockerfile

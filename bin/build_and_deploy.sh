@@ -17,7 +17,8 @@ function build {
 # build and deploy everything
 
 build orchestrator Dockerfile
-build engine Dockerfile
+build engine_storage Dockerfile
+build engine_subscription Dockerfile
 build client DockerfileForWeb
 build monitor DockerfileForWeb
 

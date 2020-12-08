@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/pkg/errors"
-	"github.com/stehrn/hpc-poc/gcp/storage"
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,10 +16,11 @@ import (
 
 // JobOptions details of job to create
 type JobOptions struct {
-	Name   string
-	Image  string
-	Labels map[string]string
-	storage.Location
+	Name        string
+	Image       string
+	Parallelism int32
+	Labels      map[string]string
+	Env         []apiv1.EnvVar
 }
 
 // ListJobs list all jobs
@@ -41,6 +41,7 @@ func (c Client) CreateJob(options JobOptions) (*batchv1.Job, error) {
 			Labels:    options.Labels,
 		},
 		Spec: batchv1.JobSpec{
+			Parallelism: &options.Parallelism,
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: options.Labels,
@@ -68,20 +69,7 @@ func (c Client) CreateJob(options JobOptions) (*batchv1.Job, error) {
 									ReadOnly:  true,
 								},
 							},
-							Env: []apiv1.EnvVar{
-								{
-									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-									Value: "/var/secrets/google/key.json",
-								},
-								{
-									Name:  "CLOUD_STORAGE_BUCKET_NAME",
-									Value: options.Bucket,
-								},
-								{
-									Name:  "CLOUD_STORAGE_OBJECT_NAME",
-									Value: options.Object,
-								},
-							},
+							Env: options.Env,
 						},
 					},
 				},
@@ -157,4 +145,17 @@ func (c Client) LastPodStatus(job string) (PodStatus, error) {
 		return PodStatus{}, err
 	}
 	return NewPodStatus(pod), nil
+}
+
+// LogsForJob get logs for job name
+func (c Client) LogsForJob(jobName string) (string, error) {
+	pod, err := c.LatestPod(jobName)
+	if err != nil {
+		return "", errors.Wrapf(err, "Failed to load logs for job '%s'", jobName)
+	}
+	log, err := c.LogsForPod(pod.Name)
+	if err != nil {
+		return "", errors.Wrapf(err, "Failed to load logs for job '%s'", jobName)
+	}
+	return log, nil
 }

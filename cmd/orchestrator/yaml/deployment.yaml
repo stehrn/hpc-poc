@@ -35,7 +35,7 @@ spec:
           value: /var/secrets/google/key.json
         - name: CLOUD_STORAGE_BUCKET_NAME
           value: hpc-poc-bucket  
-        - name: ENGINE_IMAGE
-          value: "gcr.io/hpc-poc/engine:latest"  
+        - name: IMAGE_REGISTRY
+          value: "gcr.io/hpc-poc"  
       serviceAccount: job-engine
       serviceAccountName: job-engine

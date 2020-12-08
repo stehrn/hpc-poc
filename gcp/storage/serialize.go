@@ -7,7 +7,7 @@ import (
 )
 
 // ToBytes conver Location to []byte
-func ToBytes(location Location) ([]byte, error) {
+func (location Location) ToBytes() ([]byte, error) {
 	bytes, err := json.Marshal(location)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not convert location to bytes")
@@ -24,3 +24,4 @@ func ToLocation(bytes []byte) (Location, error) {
 	}
 	return location, nil
 }
+

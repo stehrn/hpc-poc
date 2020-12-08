@@ -9,7 +9,7 @@ func TestEncoding(t *testing.T) {
 
 	// convert location to bytes
 	location := Location{"bucket-a", "object-1"}
-	bytes, err := ToBytes(location)
+	bytes, err := location.ToBytes()
 	if err != nil {
 		t.Errorf("ToBytes() error = %v", err)
 		return

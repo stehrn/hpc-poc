@@ -1,3 +1,4 @@
+//
 package main
 
 import (
@@ -8,6 +9,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	batchv1 "k8s.io/api/batch/v1"
+	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/stehrn/hpc-poc/client"
@@ -20,11 +22,13 @@ import (
 
 // Global API clients used across function invocations.
 var (
-	k8Client  *k8.Client
-	subClient *messaging.Client
-	business  client.Business
+	k8Client      *k8.Client
+	subClient     *messaging.Client
+	storageClient *storage.Client
+	business      client.Business
 )
 
+// init k8 client
 func init() {
 	var err error
 	k8Client, err = k8.NewEnvClient()
@@ -33,6 +37,7 @@ func init() {
 	}
 }
 
+// init sub client
 func init() {
 	var err error
 	business = client.BusinessFromEnv()
@@ -41,6 +46,15 @@ func init() {
 	subClient, err = messaging.NewSubClient(project, subscription)
 	if err != nil {
 		log.Fatalf("Could not create gcp sub client: %v", err)
+	}
+}
+
+// init storage client
+func init() {
+	var err error
+	storageClient, err = storage.NewEnvClient()
+	if err != nil {
+		log.Fatalf("Could not create gcp storage client: %v", err)
 	}
 }
 
@@ -54,11 +68,6 @@ func main() {
 func startJobWatcher() {
 	log.Print("Startng job watcher")
 	var err error
-
-	storageClient, err := storage.NewEnvClient()
-	if err != nil {
-		log.Fatalf("Could not create gcp storage client: %v", err)
-	}
 
 	options := metav1.ListOptions{LabelSelector: fmt.Sprintf("business=%s", string(business))}
 	err = k8Client.Watch(options, kubernetes.SUCCESS, func(job *batchv1.Job) {
@@ -79,8 +88,7 @@ func startJobWatcher() {
 
 func subscribe() {
 	log.Print("Startng subscriber")
-	engineImage := utils.Env("ENGINE_IMAGE")
-	log.Printf("k8 job will use engine image: '%s'", engineImage)
+	imageRegistry := utils.Env("IMAGE_REGISTRY")
 
 	err := subClient.Subscribe(func(ctx context.Context, m *pubsub.Message) {
 		location, err := storage.ToLocation(m.Data)
@@ -89,11 +97,30 @@ func subscribe() {
 			return
 		}
 
+		strategy := strategy(location)
+		var engineImage string
+		var parallelism int32
+		var env []apiv1.EnvVar
+		if strategy == "storage" {
+			env = storageEnv(location)
+			parallelism = 1
+		} else {
+			var subscriptionID string
+			subscriptionID, parallelism, err = publishToTempTopic(location)
+			if err != nil {
+				log.Printf("Could not create subscription for location %q, error: %v", location, err)
+				return
+			}
+			env = subscriptionEnv(storageClient.BucketName, subClient.Project, subscriptionID)
+		}
+		engineImage = fmt.Sprintf("%s/engine_%s:latest", imageRegistry, strategy)
+
 		options := k8.JobOptions{
-			Name:     "engine-job-" + m.ID,
-			Image:    engineImage,
-			Labels:   labels(location, m.ID),
-			Location: location}
+			Name:        "engine-job-" + m.ID,
+			Image:       engineImage,
+			Parallelism: parallelism,
+			Labels:      labels(location, m.ID),
+			Env:         env}
 		log.Printf("Creating Job with options: %v", options)
 		_, err = k8Client.CreateJob(options)
 		if err != nil {
@@ -106,6 +133,82 @@ func subscribe() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// TODO
+func strategy(location storage.Location) string {
+	if !strings.HasPrefix(location.Object, "bu1") {
+		return "subscription"
+	}
+	return "storage"
+}
+
+func publishToTempTopic(location storage.Location) (string, int32, error) {
+
+	// get slice of storage locations
+	directory := strings.Trim(location.Object, "/")
+	objects, err := storageClient.ListStorageObjects(directory)
+	if err != nil {
+		return "", 0, err
+	}
+	data, err := storageClient.ToLocationByteSlice(objects)
+	if err != nil {
+		return "", 0, err
+	}
+	log.Printf("Loaded %d storage objects from %s", len(data), directory)
+
+	// create temp topic and subscription and publish locations
+	ID := strings.ReplaceAll(location.Object, "/", "-")
+	tmpPubSub, err := subClient.NewTempPubSub(ID)
+	if err != nil {
+		return "", 0, err
+	}
+
+	err = tmpPubSub.Publish(data)
+	if err != nil {
+		return "", 0, err
+	}
+	log.Printf("Published to topic %q", tmpPubSub.TopicName())
+
+	return tmpPubSub.SubscriptionID(), int32(len(data)), nil
+}
+
+// storageEnv env variables for storage based engine
+func storageEnv(location storage.Location) []apiv1.EnvVar {
+	return []apiv1.EnvVar{
+		{
+			Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+			Value: "/var/secrets/google/key.json",
+		},
+		{
+			Name:  "CLOUD_STORAGE_BUCKET_NAME",
+			Value: location.Bucket,
+		},
+		{
+			Name:  "CLOUD_STORAGE_OBJECT_NAME",
+			Value: location.Object,
+		}}
+}
+
+// subscriptionEnv env variables for subscription based engine
+func subscriptionEnv(bucket, project, subscription string) []apiv1.EnvVar {
+	return []apiv1.EnvVar{
+		{
+			Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+			Value: "/var/secrets/google/key.json",
+		},
+		{
+			Name:  "CLOUD_STORAGE_BUCKET_NAME",
+			Value: bucket,
+		},
+		{
+			Name:  "PROJECT_NAME",
+			Value: project,
+		},
+		{
+			Name:  "SUBSCRIPTION_NAME",
+			Value: subscription,
+		}}
 }
 
 func labels(location storage.Location, messageID string) map[string]string {

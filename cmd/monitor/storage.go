@@ -5,10 +5,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/stehrn/hpc-poc/gcp/storage"
-	"google.golang.org/api/iterator"
 )
 
 var storageClient *storage.Client
@@ -16,13 +14,7 @@ var storageClient *storage.Client
 type storageTemplate struct {
 	Business string
 	Bucket   string
-	Objects  []storageObject
-}
-
-type storageObject struct {
-	Object  string
-	Size    int64
-	Created time.Time
+	Objects  []storage.Object
 }
 
 func init() {
@@ -55,21 +47,9 @@ func (ctx *handlerContext) BucketHandler(w http.ResponseWriter, r *http.Request)
 
 func (ctx *handlerContext) objects(business string, w http.ResponseWriter) error {
 	log.Printf("Listing objects for bucket: %s, business: %s", storageClient.BucketName, business)
-	var objects []storageObject
-	it := storageClient.List(business)
-	for {
-		attrs, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return fmt.Errorf("Bucket(%q).Objects, for business: '%s', error: %v", storageClient.BucketName, business, err)
-		}
-		object := storageObject{
-			Object:  attrs.Name,
-			Size:    attrs.Size,
-			Created: attrs.Created}
-		objects = append(objects, object)
+	objects, err := storageClient.ListStorageObjects(business)
+	if err != nil {
+		return err
 	}
 	return ctx.bucketTemplate.Execute(w, storageTemplate{
 		Business: business,

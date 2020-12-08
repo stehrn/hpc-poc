@@ -33,11 +33,11 @@ Terms:
   * can be broken down into tasks (for now  they represent same thing)
   * submitted for a given `Business`
   * has reference to data (in cloud storage) used by the `Engine`
+* `Session` - a `Job` is submitted as part of a session
 * `Business` - represents a given .. business (think desk)
   * each will have its own cloud storage sub-directory and topic
 * `Orchestrator` - handles a `Job` for given `Business`
 * `Engine` - the thing that computes something using the data referenced in the `Job`'
-
 
 ## Web applications
  * client - use to submit data 
@@ -97,6 +97,7 @@ Set up following:
   * subscribe [`pubsub.subscriber`]
   * view [`pubsub.viewer`] (to check subscription exists)
   * delete storage objects [`storage.objects.delete`]
+  * publish [`roles/editor`]
 
 * Engine:
   * read storage objects [`storage.objectViewer`]
@@ -120,6 +121,8 @@ gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:$
 gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/pubsub.publisher
 gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/pubsub.viewer
 gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/storage.objectAdmin
+gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/pubsub.editor
+
 
 // list roles
 gcloud projects get-iam-policy ${PROJECT_NAME} --flatten="bindings[].members" --format='table(bindings.role)' --filter="bindings.members:${SERVICE_ACCOUNT}"
@@ -186,3 +189,4 @@ gsutil rm gs://${CLOUD_STORAGE_BUCKET_NAME}/${BUSINESS_NAME}/*
 
 ```
 
+gsutil ls -r gs://${CLOUD_STORAGE_BUCKET_NAME}/bu2*

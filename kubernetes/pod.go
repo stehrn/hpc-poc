@@ -27,7 +27,7 @@ func (c Client) LatestPod(jobName string) (apiv1.Pod, error) {
 	return apiv1.Pod{}, nil
 }
 
-// Pods get Poda for given job name
+// Pods get Pods for given job name
 func (c Client) Pods(jobName string) ([]apiv1.Pod, error) {
 	listOptions := metav1.ListOptions{
 		LabelSelector: "job-name=" + jobName,
@@ -58,20 +58,8 @@ func (c Client) LogsForPod(podName string) (string, error) {
 	return buf.String(), nil
 }
 
-// LogsForJob get logs for job name
-func (c Client) LogsForJob(jobName string) (string, error) {
-	pod, err := c.LatestPod(jobName)
-	if err != nil {
-		return "", errors.Wrapf(err, "Failed to load logs for job '%s'", jobName)
-	}
-	log, err := c.LogsForPod(pod.Name)
-	if err != nil {
-		return "", errors.Wrapf(err, "Failed to load logs for job '%s'", jobName)
-	}
-	return log, nil
-}
 
-// NewPodStatus create new NewPodStatus from pod
+// NewPodStatus create PodStatus from pod
 func NewPodStatus(pod apiv1.Pod) PodStatus {
 	if pod.Name != "" {
 		conditions := pod.Status.Conditions

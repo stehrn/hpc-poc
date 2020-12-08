@@ -48,11 +48,11 @@ func NewClient(project, bucket string) (*Client, error) {
 //  1) upload payload to cloud storage
 //  2) publish object location
 func (c Client) Handle(business Business, data []byte) (storage.Location, string, error) {
-	location, err := c.upload(business, data)
+	location, err := c.Upload(business, data)
 	if err != nil {
 		return wrap(err)
 	}
-	id, err := c.publish(business, location)
+	id, err := c.Publish(business, location)
 	if err != nil {
 		log.Printf("Publish failed, deleting data at '%v'", location)
 		c.delete(location)
@@ -66,8 +66,8 @@ func (c Client) Topic(business Business) string {
 	return business.TopicName(c.Project)
 }
 
-// upload upload data to cloud storage
-func (c Client) upload(business Business, data []byte) (storage.Location, error) {
+// Upload upload data to cloud storage
+func (c Client) Upload(business Business, data []byte) (storage.Location, error) {
 	location := c.Storage.Location(string(business))
 	log.Printf("Uploading data to: '%v'", location)
 	return location, c.Storage.Upload(location, data)
@@ -80,14 +80,14 @@ func (c Client) delete(location storage.Location) {
 	}
 }
 
-// publish location to topic derived off business
-func (c Client) publish(business Business, location storage.Location) (string, error) {
+// Publish location to topic derived off business
+func (c Client) Publish(business Business, location storage.Location) (string, error) {
 	pubsubClient, err := c.pubsubClient(business)
 	if err != nil {
 		return "", err
 	}
 	log.Printf("Publishing location (%v) to topic: '%s'", location, pubsubClient.TopicName)
-	bytes, err := storage.ToBytes(location)
+	bytes, err := location.ToBytes()
 	if err != nil {
 		return "", err
 	}
