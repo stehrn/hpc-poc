@@ -12,9 +12,10 @@ import (
 
 // summaryTemplate data to render into summary template
 type summaryTemplate struct {
-	Namespace     string
-	BusinessNames []string
-	Jobs          []jobSummary
+	Namespace           string
+	BusinessNameOptions []BusinessNameOptions
+	Jobs                []jobSummary
+	Page                string
 }
 
 type podSummary struct {
@@ -36,8 +37,9 @@ func (ctx *handlerContext) SummaryHandler(w http.ResponseWriter, r *http.Request
 	switch r.Method {
 	case "GET":
 		summary := summaryTemplate{
-			Namespace:     ctx.client.Namespace,
-			BusinessNames: businessNames}
+			Namespace:           ctx.client.Namespace,
+			BusinessNameOptions: NewBusinessNameOptions(""),
+			Page:                "summary"}
 		ctx.summaryTemplate.Execute(w, summary)
 	case "POST":
 		business := r.FormValue("business")
@@ -50,7 +52,6 @@ func (ctx *handlerContext) SummaryHandler(w http.ResponseWriter, r *http.Request
 	return nil
 }
 
-// https://godoc.org/k8s.io/api/batch/v1
 func summary(business string, client *k8.Client) (summaryTemplate, error) {
 	var jobs []jobSummary
 	options := metav1.ListOptions{LabelSelector: fmt.Sprintf("business=%s", business)}
@@ -69,9 +70,9 @@ func summary(business string, client *k8.Client) (summaryTemplate, error) {
 		jobs = append(jobs, job)
 	}
 	return summaryTemplate{
-		Namespace:     client.Namespace,
-		BusinessNames: businessNames,
-		Jobs:          jobs}, nil
+		Namespace:           client.Namespace,
+		BusinessNameOptions: NewBusinessNameOptions(business),
+		Jobs:                jobs}, nil
 }
 
 // Last Pod State (type/reason/message)

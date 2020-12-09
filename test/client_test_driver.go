@@ -32,13 +32,6 @@ var myClient *client.Client
 //
 func main() {
 
-	// storage, err1 := storage.NewEnvClient()
-	// log.Printf("eerr? %v", err1)
-
-	// // /bu2/nik-4*
-	// obj, err1 := storage.ListStorageObjects("bu2/nik-5")
-	// log.Printf("obj? %v", obj)
-
 	business := flag.String("business", "", "name of business")
 	project := flag.String("project", "", "name of GCP project")
 	bucket := flag.String("bucket", "", "name of GCP cloud storage bucket")
@@ -98,7 +91,6 @@ func manyTasks(numTasks int, business, session string) {
 
 	var n int
 	for n < numTasks {
-
 		data := []byte(fmt.Sprintf("payload %d", n))
 		_, err := myClient.Upload(Business, data)
 		if err != nil {
@@ -113,6 +105,7 @@ func manyTasks(numTasks int, business, session string) {
 		log.Fatalf("client.Publish() err: %v", err)
 	}
 	log.Printf("Payload uploaded to cloud storage location: %s, notification sent with message ID: %s", location, id)
+	go watch(id)
 }
 
 func watch(messageID string) error {

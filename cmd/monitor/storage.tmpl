@@ -6,24 +6,38 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="http://www.datatables.net/rss.xml">
+	  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
+    <script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+
+    <script type="text/javascript" class="init">
+
+$(document).ready(function() {
+	$('#example').DataTable();
+} );
+
+	</script>
   </head>
   <body>
-
+  {{template "navbar" .}}
   <div class="container-fluid">
   <div class="row">
     <div class="col-sm bg-light">
-
     <h2>Monitor (Buckets)</h2>    
     <p class="lead">
         <h6>Business: <span class="badge badge-secondary">{{ .Business }}</span></h6>
         <h6>Bucket: <span class="badge badge-secondary">{{ .Bucket }}</span></h6>
     </p>
+    {{template "option" .}}
 
+    {{ if .Objects }}
     <div class="row">
      <div class="col-sm bg-light">
       <p class="lead">
       <h4>Objects</h4>
-      <table class="table table-bordered table-sm">
+      <table id="example" class="display" style="width:100%">
         <thead class="thead-light">
       	<tr>
           <th scope="col">Object</td>
@@ -35,7 +49,7 @@
       	{{ with .Objects }}
 			  {{ range . }}
       	  <tr>
-            <td><a href="/bucket/object/{{ .Object }}">{{ .Object }}</a></td>
+            <td><a href="/storage/object/{{ .Object }}">{{ .Object }}</a></td>
             <td>{{ .Size }}</td>
             <td>{{ .Created }}</td>
           </tr>
@@ -46,6 +60,7 @@
       </p>  
      </div>
     </div>
+    {{ end }}
 
     </div>
 

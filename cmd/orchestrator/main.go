@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"strings"
 
 	"cloud.google.com/go/pubsub"
@@ -99,18 +100,22 @@ func subscribe() {
 
 		strategy := strategy(location)
 		var engineImage string
-		var parallelism int32
+		var numTasks, parallelism int32
 		var env []apiv1.EnvVar
 		if strategy == "storage" {
 			env = storageEnv(location)
+			numTasks = 1
 			parallelism = 1
 		} else {
 			var subscriptionID string
-			subscriptionID, parallelism, err = publishToTempTopic(location)
+			subscriptionID, numTasks, err = publishToTempTopic(location)
 			if err != nil {
 				log.Printf("Could not create subscription for location %q, error: %v", location, err)
 				return
 			}
+			loadFactor := 0.3
+			parallelism = int32(math.Max(float64(numTasks)*float64(loadFactor), 1.0))
+			log.Printf("Parallelism set to %d, (numtasks * loadFactor) = (%d * %f)", parallelism, numTasks, loadFactor)
 			env = subscriptionEnv(storageClient.BucketName, subClient.Project, subscriptionID)
 		}
 		engineImage = fmt.Sprintf("%s/engine_%s:latest", imageRegistry, strategy)
@@ -119,7 +124,7 @@ func subscribe() {
 			Name:        "engine-job-" + m.ID,
 			Image:       engineImage,
 			Parallelism: parallelism,
-			Labels:      labels(location, m.ID),
+			Labels:      labels(location, fmt.Sprint(numTasks), m.ID),
 			Env:         env}
 		log.Printf("Creating Job with options: %v", options)
 		_, err = k8Client.CreateJob(options)
@@ -211,9 +216,10 @@ func subscriptionEnv(bucket, project, subscription string) []apiv1.EnvVar {
 		}}
 }
 
-func labels(location storage.Location, messageID string) map[string]string {
+func labels(location storage.Location, tasks, messageID string) map[string]string {
 	labels := make(map[string]string)
 	labels["business"] = string(business)
+	labels["tasks"] = string(tasks)
 	labels["k8.namespace"] = k8Client.Namespace
 	labels["gcp.storage.bucket"] = location.Bucket
 	labels["gcp.storage.object"] = clean(location.Object)

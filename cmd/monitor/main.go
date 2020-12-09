@@ -14,6 +14,25 @@ import (
 
 var businessNames []string
 
+// BusinessNameOptions
+type BusinessNameOptions struct {
+	Name     string
+	Selected bool
+}
+
+// NewBusinessNameOptions
+func NewBusinessNameOptions(selected string) []BusinessNameOptions {
+	options := make([]BusinessNameOptions, len(businessNames))
+	for i, name := range businessNames {
+		var isOptSelected bool
+		if name == selected {
+			isOptSelected = true
+		}
+		options[i] = BusinessNameOptions{name, isOptSelected}
+	}
+	return options
+}
+
 func init() {
 	businessNames = client.BusinessNamesFromEnv()
 }
@@ -22,7 +41,7 @@ type handlerContext struct {
 	client          *k8.Client
 	summaryTemplate *template.Template
 	jobTemplate     *template.Template
-	bucketTemplate  *template.Template
+	storageTemplate *template.Template
 }
 
 var templatePath string
@@ -43,16 +62,16 @@ func main() {
 	}
 	ctx := &handlerContext{
 		client:          client,
-		summaryTemplate: loadTemplate("./summary.tmpl"),
-		jobTemplate:     loadTemplate("./job.tmpl"),
-		bucketTemplate:  loadTemplate("./storage.tmpl")}
+		summaryTemplate: loadTemplate("./summary.tmpl", "./option.tmpl", "./navbar.tmpl"),
+		jobTemplate:     loadTemplate("./job.tmpl", "./navbar.tmpl"),
+		storageTemplate: loadTemplate("./storage.tmpl", "./option.tmpl", "./navbar.tmpl")}
 
 	summaryHandler := http_common.ErrorHandler(ctx.SummaryHandler)
 	http.HandleFunc("/", summaryHandler)
 	http.HandleFunc("/summary", summaryHandler)
 	http.HandleFunc("/job/", http_common.ErrorHandler(ctx.JobHandler))
 	http.HandleFunc("/logs/", http_common.ErrorHandler(ctx.LogsHandler))
-	http.HandleFunc("/bucket/", http_common.ErrorHandler(ctx.BucketHandler))
+	http.HandleFunc("/storage/", http_common.ErrorHandler(ctx.StorageHandler))
 
 	port := http_common.Port()
 	log.Printf("Monitor service Listening on port %s", port)
@@ -61,7 +80,11 @@ func main() {
 	}
 }
 
-func loadTemplate(name string) *template.Template {
-	myTemplate := filepath.Join(templatePath, name)
-	return template.Must(template.ParseFiles(myTemplate))
+func loadTemplate(names ...string) *template.Template {
+	var templates []string
+	for _, name := range names {
+		fullPath := filepath.Join(templatePath, name)
+		templates = append(templates, fullPath)
+	}
+	return template.Must(template.ParseFiles(templates...))
 }

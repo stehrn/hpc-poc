@@ -8,7 +8,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   </head>
   <body>
-
+  {{template "navbar" .}}
   <div class="container-fluid">
    <div class="row">
      <div class="col-sm bg-light">
@@ -30,6 +30,7 @@
         <h6>Cluster Name: <span class="badge badge-secondary">{{ .Job.ClusterName }}</span></h6>
         <h6>Namespace: <span class="badge badge-secondary">{{ .Job.Namespace }}</span></h6>
         <h6>Created: <span class="badge badge-secondary">{{ .Job.CreationTimestamp }}</span></h6>
+        <h6>Parallelism: <span class="badge badge-secondary">{{ .Job.Spec.Parallelism }}</span></h6>
         <h6>Labels: </h6>
         <ul>
         {{ range $key, $value := .Job.Labels }}

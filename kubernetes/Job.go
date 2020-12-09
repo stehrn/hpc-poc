@@ -106,7 +106,7 @@ func (c Client) Watch(filter metav1.ListOptions, predicate func(status batchv1.J
 
 // SUCCESS return true is job succesful
 func SUCCESS(status batchv1.JobStatus) bool {
-	return status.Succeeded == 1
+	return status.Active == 0 && status.Failed == 0
 }
 
 // ANY just always return true, regardless of status

@@ -40,29 +40,40 @@ func init() {
 func main() {
 	log.Print("Starting Engine")
 
-	err := subClient.Subscribe(func(ctx context.Context, m *pubsub.Message) {
-		location, err := storage.ToLocation(m.Data)
+	for {
+		count, err := subClient.PullMsgsSync(func(ctx context.Context, m *pubsub.Message) {
+			location, err := storage.ToLocation(m.Data)
+			if err != nil {
+				log.Printf("Could not get location from message data (%v), error: %v", m.Data, err)
+				return
+			}
+
+			data, err := storageClient.Download(location)
+			if err != nil {
+				log.Fatalf("Failed to download object, error: %v", err)
+			}
+
+			log.Printf("Loaded data: %v", string(data))
+
+			// to simulate engine failure
+			if string(data) == "PANIC" {
+				panic("engine failed!")
+			}
+
+			m.Ack()
+		})
+
 		if err != nil {
-			log.Printf("Could not get location from message data (%v), error: %v", m.Data, err)
-			return
+			panic(err)
 		}
 
-		data, err := storageClient.Download(location)
-		if err != nil {
-			log.Fatalf("Failed to download object, error: %v", err)
+		if count == 0 {
+			log.Print("No messages left, exiting")
+			break
+		} else {
+			log.Printf("Processed %d messages", count)
 		}
-
-		log.Printf("Loaded data: %v", string(data))
-
-		// to simulate engine failure
-		if string(data) == "PANIC" {
-			panic("engine failed!")
-		}
-
-		m.Ack()
-	})
-
-	if err != nil {
-		panic(err)
 	}
+
+	log.Print("Exit")
 }
