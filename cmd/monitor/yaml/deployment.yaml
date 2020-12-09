@@ -32,6 +32,6 @@ spec:
         - name: NAMESPACE
           value: default
         - name: BUSINESS_NAMES
-          value: bu1,bu2  
+          value: bu1,bu2,bu3  
       serviceAccount: monitor
       serviceAccountName: monitor

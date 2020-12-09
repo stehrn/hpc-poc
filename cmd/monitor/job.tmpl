@@ -1,20 +1,42 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Monitor (Jobs)</title>
+    <title>Monitor / Jobs / {{ .Job.Name }}</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="http://www.datatables.net/rss.xml">
+	  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
+    <script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+	  <script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+
+    <script type="text/javascript" class="init">
+      $(document).ready(function() {
+        $('table.cell-border').DataTable( {
+          "paging":   false,
+          "ordering": true,
+          "info":     false
+        } );	
+      } );
+	  </script>
+    <style>
+      table.dataTable thead tr {
+        background-color: #EAEDED;
+      }
+
+      h5 {
+        display: inline-block;
+      }
+    </style>
   </head>
   <body>
   {{template "navbar" .}}
   <div class="container-fluid">
    <div class="row">
-     <div class="col-sm bg-light">
-
-      <h2>Monitor (Jobs)</h2>    
-
+     <div class="col-sm">
+      <h3>Monitor / Jobs / {{ .Job.Name }}</h3>    
       {{ $lastPod := .LastPod }}
       {{if $lastPod.IsError }}
       <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -24,48 +46,59 @@
         </button>
       </div>
       {{end}}
-
       <p class="lead">
-        <h6>Job Name: <span class="badge badge-secondary">{{ .Job.Name }}</span></h6>
-        <h6>Cluster Name: <span class="badge badge-secondary">{{ .Job.ClusterName }}</span></h6>
-        <h6>Namespace: <span class="badge badge-secondary">{{ .Job.Namespace }}</span></h6>
-        <h6>Created: <span class="badge badge-secondary">{{ .Job.CreationTimestamp }}</span></h6>
-        <h6>Parallelism: <span class="badge badge-secondary">{{ .Job.Spec.Parallelism }}</span></h6>
-        <h6>Labels: </h6>
-        <ul>
-        {{ range $key, $value := .Job.Labels }}
-           <li>{{ $key }}: <span class="badge badge-info">{{ $value }}</span></li>
-        {{ end }}
-        </ul>
-        <h6>Started: <span class="badge badge-secondary">{{ .Job.Status.StartTime }}</span></h6>
-        <ul>
-          <li>Active <span class="badge badge-primary badge-pill">{{ .Job.Status.Active }}</span></li>
-          <li>Succeeded <span class="badge badge-success badge-pill">{{ .Job.Status.Succeeded }}</span></li>
-          <li>Failed <span class="badge badge-danger badge-pill">{{ .Job.Status.Failed }}</span></li>
-        </ul>
+        <table width="90%">  
+          <h4> 
+          {{ $status :=.Job.JobState }}
+          {{ if $status.HasFailures }}
+            <span class="badge badge-pill badge-danger">{{ $status }}</span>
+          {{ else }}
+            {{ if $status.IsRunning }}
+              <span class="badge badge-pill badge-primary">{{ $status }}</span>
+            {{ else }}
+              <span class="badge badge-pill badge-success">{{ $status }}</span>
+            {{end}}  
+          {{end}}
+          </h4>
+          <tr><td><b>Namespace:</b></td><td>{{ .Job.Namespace }}</td></tr>
+          <tr><td><b>Created:</b></td><td>{{ .Job.CreationTimestamp.Format "Jan 02, 2006, 15:04:05 PM (MST)" }}</td></tr>
+          <tr><td><b>Parallelism:</b></td><td>{{ .Job.Spec.Parallelism }}</td></tr>
+          <tr><td><b>Labels:</b></td><td>
+            <table width="60%"><tr><td><h6>
+            {{ range $key, $value := .Job.Labels }}
+             <h5><span class="badge badge-pill badge-primary">{{ $key }}: {{ $value }}</span></h5>
+            {{ end }}
+            </h6></td></tr></table>
+          </td></tr>
+          <tr><td><b>Started:</b></td><td>{{ .Job.Status.StartTime.Format "Jan 02, 2006, 15:04:05 PM (MST)" }}</td></tr>
+          <tr><td><b>Active:</b></td><td><span class="badge badge-primary badge-pill">{{ .Job.Status.Active }}</span></td></tr>
+          <tr><td><b>Succeeded:</b></td><td><span class="badge badge-success badge-pill">{{ .Job.Status.Succeeded }}</span></td></tr>
+          <tr><td><b>Failed:</b></td><td><span class="badge badge-danger badge-pill">{{ .Job.Status.Failed }}</span></td></tr>
+        </table>
       </p>
      </div>
    </div>
 
   <div class="row">
-    <div class="col-sm bg-light">
+    <div class="col-sm">
       <p class="lead">
       <h4>Pod Specification</h4>
-      <h6>Labels: </h6>
-        <ul>
+      <h6>Environment: </h6>
+        <table>
         {{ range .Job.ContainerEnv }}
-           <li>{{ .Name }}: <span class="badge badge-info">{{ .Value }}</span></li>
+           <tr><td style="padding:2px">{{ .Name }}</td><td><h5><span class="badge badge-pill badge-primary">{{ .Value }}</span></h5></td></tr>
         {{ end }}
-        </ul>
+        <table>
       </p>  
     </div>
   </div>
 
    <div class="row">
-     <div class="col-sm bg-light">
+     <div class="col-sm">
       <p class="lead">
       <h4>Job Conditions</h4>
-      <table class="table table-bordered table-sm">
+      <table id="data" class="cell-border compact" style="width:100%">
+
         <thead class="thead-light">
       	<tr>
           <th scope="col">Message</td>
@@ -84,8 +117,8 @@
             <td>{{ .Reason }}</td>
             <td>{{ .Type }}</td>
             <td>{{ .Status }}</td>
-            <td>{{ .LastProbeTime }}</td>
-            <td>{{ .LastTransitionTime }}</td>
+            <td>{{ .LastProbeTime.Format "Jan 02, 2006, 15:04:05 PM (MST)" }}</td>
+            <td>{{ .LastTransitionTime.Format "Jan 02, 2006, 15:04:05 PM (MST)" }}</td>
           </tr>
         {{ end }} 
       	{{ end }}
@@ -96,15 +129,15 @@
   </div>
 
   <div class="row">
-    <div class="col-sm bg-light">
+    <div class="col-sm">
       <p class="lead">
       <h4>Managed Pods</h4>
-      <table class="table table-bordered table-sm">
+      <table id="data" class="cell-border compact" style="width:100%">
       <thead class="thead-light">
       	<tr>
           <th scope="col">Name</td>
           <th scope="col">Status</td>
-          <th scope="col">Condition</td>
+          <th scope="col">Message</td>
           <th scope="col">Created On</td>
           <th scope="col">Log</td>
         </tr>
@@ -128,15 +161,11 @@
             <ul>
             {{if .Status.Conditions}}
             {{ $condition := (index .Status.Conditions 0) }}
-              <li>Type: <span class="badge badge-info">{{ $condition.Type }}</span></li>
-              <li>Status: <span class="badge badge-info">{{ $condition.Status }}</span></li>
-              <li>LastProbeTime: <span class="badge badge-info">{{ $condition.LastProbeTime }}</span></li>
-              <li>Reason: <span class="badge badge-info">{{ $condition.Reason }}</span></li>
-              <li>Message: <span class="badge badge-info">{{ $condition.Message }}</span></li>
+               {{ $condition.Message }}
             {{end}}
             </ul>
           </td>
-          <td>{{ .CreationTimestamp }}</td>
+          <td>{{ .CreationTimestamp.Format "Jan 02, 2006, 15:04:05 PM (MST)" }}</td>
           <td><a href="/logs/pod/{{ .Name }}/log">Logs</a></td>
         </tr>
 			{{ end }} 
@@ -146,8 +175,6 @@
       </p>  
     </div>
   </div>
-
-
 
  </div>
 </body>

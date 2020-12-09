@@ -95,7 +95,7 @@ func (c *Client) Download(location Location) ([]byte, error) {
 }
 
 // Delete delete object at given location
-func (c *Client) Delete(location Location) error {
+func (c Client) Delete(location Location) error {
 	ctx := context.Background()
 
 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)

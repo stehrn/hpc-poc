@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: orchestrator
+  name: orchestrator-bu3
   namespace: default
 spec:
   selector:
     matchLabels:
-      app: orchestrator
+      app: orchestrator-bu3
   template:
     metadata:
       labels:
-        app: orchestrator
+        app: orchestrator-bu3
     spec:
       volumes:
       - name: google-cloud-key
@@ -28,7 +28,9 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         - name: BUSINESS_NAME
-          value: bu1
+          value: bu3
+        - name: TASK_LOAD_FACTOR
+          value: "0.1"
         - name: PROJECT_NAME
           value: hpc-poc
         - name: GOOGLE_APPLICATION_CREDENTIALS

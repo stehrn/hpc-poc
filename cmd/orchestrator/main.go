@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
+	"strconv"
 	"strings"
 
 	"cloud.google.com/go/pubsub"
@@ -23,11 +25,14 @@ import (
 
 // Global API clients used across function invocations.
 var (
-	k8Client      *k8.Client
-	subClient     *messaging.Client
-	storageClient *storage.Client
-	business      client.Business
+	k8Client       *k8.Client
+	subClient      *messaging.Client
+	storageClient  *storage.Client
+	business       client.Business
+	taskLoadFactor float64
 )
+
+const defaultTaskLoadFactor = 0.2
 
 // init k8 client
 func init() {
@@ -56,6 +61,22 @@ func init() {
 	storageClient, err = storage.NewEnvClient()
 	if err != nil {
 		log.Fatalf("Could not create gcp storage client: %v", err)
+	}
+}
+
+// init task load factor
+func init() {
+	factorEnv := os.Getenv("TASK_LOAD_FACTOR")
+	if factorEnv != "" {
+		var err error
+		taskLoadFactor, err = strconv.ParseFloat(factorEnv, 64)
+		if err != nil {
+			log.Fatalf("Could not convert SCALING_FACTOR %s into float64: %v", factorEnv, err)
+		}
+		log.Printf("Task load factor set to %f", taskLoadFactor)
+	} else {
+		taskLoadFactor = defaultTaskLoadFactor
+		log.Printf("Task load factor set to default value of %f", taskLoadFactor)
 	}
 }
 
@@ -113,9 +134,8 @@ func subscribe() {
 				log.Printf("Could not create subscription for location %q, error: %v", location, err)
 				return
 			}
-			loadFactor := 0.3
-			parallelism = int32(math.Max(float64(numTasks)*float64(loadFactor), 1.0))
-			log.Printf("Parallelism set to %d, (numtasks * loadFactor) = (%d * %f)", parallelism, numTasks, loadFactor)
+			parallelism = int32(math.Max(float64(numTasks)*float64(taskLoadFactor), 1.0))
+			log.Printf("Parallelism set to %d, (numtasks * taskLoadFactor) = (%d * %f)", parallelism, numTasks, taskLoadFactor)
 			env = subscriptionEnv(storageClient.BucketName, subClient.Project, subscriptionID)
 		}
 		engineImage = fmt.Sprintf("%s/engine_%s:latest", imageRegistry, strategy)
@@ -219,7 +239,8 @@ func subscriptionEnv(bucket, project, subscription string) []apiv1.EnvVar {
 func labels(location storage.Location, tasks, messageID string) map[string]string {
 	labels := make(map[string]string)
 	labels["business"] = string(business)
-	labels["tasks"] = string(tasks)
+	labels["task.count"] = string(tasks)
+	labels["task.load.factor"] = fmt.Sprint(taskLoadFactor)
 	labels["k8.namespace"] = k8Client.Namespace
 	labels["gcp.storage.bucket"] = location.Bucket
 	labels["gcp.storage.object"] = clean(location.Object)

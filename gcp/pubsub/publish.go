@@ -73,10 +73,10 @@ func (c Client) topic() (*pubsub.Topic, error) {
 	ctx := context.Background()
 	ok, err := topic.Exists(ctx)
 	if err != nil {
-		return &pubsub.Topic{}, errors.Wrapf(err, "Failed to find out if topic %s exists", c.TopicName)
+		return nil, errors.Wrapf(err, "Failed to find out if topic %q exists", c.TopicName)
 	}
 	if !ok {
-		return &pubsub.Topic{}, errors.Errorf("Topic %s does not exist", c.TopicName)
+		return nil, errors.Errorf("Topic %q does not exist", c.TopicName)
 	}
 	return topic, nil
 }

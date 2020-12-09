@@ -1,7 +1,6 @@
 package kubernetes
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/pkg/errors"
@@ -32,7 +31,7 @@ func (c Client) ListJobs(options metav1.ListOptions) (*batchv1.JobList, error) {
 	return result, nil
 }
 
-// CreateJob create a k8 job
+// CreateJob create a new Job
 func (c Client) CreateJob(options JobOptions) (*batchv1.Job, error) {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -104,38 +103,13 @@ func (c Client) Watch(filter metav1.ListOptions, predicate func(status batchv1.J
 	return nil
 }
 
-// SUCCESS return true is job succesful
-func SUCCESS(status batchv1.JobStatus) bool {
-	return status.Active == 0 && status.Failed == 0
-}
-
-// ANY just always return true, regardless of status
-func ANY(status batchv1.JobStatus) bool {
-	return true
-}
-
-// Job load job from job name
+// Job load Job for given job name
 func (c Client) Job(jobName string) (*batchv1.Job, error) {
 	result, err := c.jobsClient().Get(jobName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to get job: '%s'", jobName)
 	}
 	return result, nil
-}
-
-// Status status of job - assumes we only have 1 job
-func Status(status batchv1.JobStatus) string {
-	if status.Active > 0 {
-		return "Running"
-	} else if status.Succeeded > 0 {
-		return "Successful"
-	} else if status.Failed > 0 {
-		if len(status.Conditions) > 0 {
-			return fmt.Sprintf("Failed (%s)", status.Conditions[0].Reason)
-		}
-		return "Failed"
-	}
-	return "Unkonwn"
 }
 
 // LastPodStatus get status of last Pod in Job

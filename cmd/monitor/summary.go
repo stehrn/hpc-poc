@@ -26,7 +26,7 @@ type podSummary struct {
 
 type jobSummary struct {
 	Name           string
-	Status         string
+	Status         k8.JobState
 	StartTime      string
 	CompletionTime string
 	Duration       string
@@ -62,7 +62,7 @@ func summary(business string, client *k8.Client) (summaryTemplate, error) {
 	for _, item := range jobList.Items {
 		job := jobSummary{
 			Name:           item.Name,
-			Status:         k8.Status(item.Status),
+			Status:         k8.GetJobState(item.Status),
 			StartTime:      k8.ToString(item.Status.StartTime),
 			CompletionTime: k8.ToString(item.Status.CompletionTime),
 			Duration:       k8.Duration(item.Status.StartTime, item.Status.CompletionTime),

@@ -51,6 +51,11 @@ func (j jobsTemplate) LastPod() k8.PodStatus {
 }
 
 // called from job.tmpl
+func (j myJob) JobState() k8.JobState {
+	return k8.GetJobState(j.Status)
+}
+
+// called from job.tmpl
 func (j myJob) ContainerEnv() []apiv1.EnvVar {
 	return j.Spec.Template.Spec.Containers[0].Env
 }

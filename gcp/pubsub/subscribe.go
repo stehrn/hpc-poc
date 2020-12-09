@@ -31,7 +31,7 @@ func (c Client) Subscribe(callback func(ctx context.Context, m *pubsub.Message))
 	return nil
 }
 
-// PullMsgsSync
+// PullMsgsSync pull one message at a time, so that other subscribers can get a shot of processing a message
 func (c Client) PullMsgsSync(callback func(ctx context.Context, m *pubsub.Message)) (int32, error) {
 	if c.SubscriptionID == "" {
 		return 0, errors.New("Subscription required")
@@ -41,6 +41,7 @@ func (c Client) PullMsgsSync(callback func(ctx context.Context, m *pubsub.Messag
 	if err != nil {
 		return 0, err
 	}
+	// these settings ensure only 1 message in memory at a time
 	sub.ReceiveSettings.Synchronous = true
 	sub.ReceiveSettings.MaxOutstandingMessages = 1
 

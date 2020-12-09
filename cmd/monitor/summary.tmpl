@@ -2,69 +2,77 @@
 <html>
   <head>
     <title>Monitor (Summary)</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+      <link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="http://www.datatables.net/rss.xml">
+	    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
+      <script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+	    <script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
 
-	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.css">
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/dataTables.bootstrap4.min.css">
-<style type="text/css" class="init">
-	
-	</style>
-
-	<script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
-	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
-	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap4.min.js"></script>
-	<script type="text/javascript" class="init">
-
-<script type="text/javascript" class="init">
-$(document).ready(function() {
-	$('#summary').DataTable();
-} );
-
-	</script>
-
-</head>
-<body>
+      <script type="text/javascript" class="init">
+        $(document).ready(function() {
+	        $('#summary').DataTable();
+        } );
+	    </script>
+      <style>
+        table.dataTable thead tr {
+          background-color: #EAEDED;
+        }
+      </style>
+  </head>
+  <body>
   {{template "navbar" .}}
   <div class="container-fluid">
     <div class="row">
-      <div class="col-sm bg-light">
-        <h2>Monitor (Summary)</h2>      
+      <div class="col-sm">
+        <h3>Monitor (Summary)</h3>      
         <p class="lead">
-          <h6>Namespace: <span class="badge badge-secondary">{{ .Namespace }}</span></h6>
+          <table>
+           <tr><td><h6>Namespace:</h6><td><td><h5><span class="badge badge-pill badge-secondary">{{ .Namespace }}</span></h5></td></tr>
+          </table>
         </p>
       </div>
     </div>
     {{template "option" .}}
     {{ if .Jobs }}
-    <table id="summary" class="table table-bordered table-sm">
+    <table id="summary" class="cell-border compact" style="width:100%">
       <thead class="thead-light">
       	<tr>
           <th scope="col">Job Name</td>
-          <th scope="col">Job Status</td>
-          <th scope="col">Job Start Time</td>
-          <th scope="col">Job Completion Time</td>
-          <th scope="col">Job Duration</td>
-          <th scope="col">Pod Status</td>
-          <th scope="col">Pod Last State (Message)</td>
-          <th scope="col">Logs</td>
+          <th scope="col">Status</td>
+          <th scope="col">Start Time</td>
+          <th scope="col">Completion Time</td>
+          <th scope="col">Duration</td>
       </tr>
     </thead>
     <tbody>
       	{{ with .Jobs }}
-			{{ range . }}
+		  	  {{ range . }}
       			<tr>
               		<th scope="row"><a href="/job/{{ .Name }}">{{ .Name }}</a></td>
-                  <td>{{ .Status }}</td>
+                  <td>
+                  <h4> 
+                  {{ if .Status.HasFailures }}
+                    <span class="badge badge-pill badge-danger">{{ .Status }}</span>
+                  {{ else }}
+                    {{ if .Status.IsRunning }}
+                      <span class="badge badge-pill badge-primary">{{ .Status }}</span>
+                    {{ else }}
+                      <span class="badge badge-pill badge-success">{{ .Status }}</span>
+                    {{end}}  
+                  {{end}}
+                  </h4> 
+                  </td>
                   <td>{{ .StartTime }}</td>
                   <td>{{ .CompletionTime }}</td>
                   <td>{{ .Duration }}</td>
-                  <td>{{ .Pod.Status }}</td>
-                  <td>{{ .Pod.LastState.Type }} ({{ .Pod.LastState.Reason }} {{ .Pod.LastState.Message }})</td>
-                  <td><a href="/logs/job/{{ .Name }}">Logs</a></td>
             </tr>
-            </tbody>
-			{{ end }} 
+		      {{ end }} 
       	{{ end }}
+    </tbody>
     </table>
     {{ end }}
   </body>

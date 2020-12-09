@@ -14,5 +14,6 @@ export IMAGE_REGISTRY=gcr.io/${PROJECT_NAME}
 
 #  app specific
 export BUSINESS_NAME=bu3
+export TASK_LOAD_FACTOR=0.6
 
 go run *.go

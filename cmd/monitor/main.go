@@ -7,35 +7,9 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/stehrn/hpc-poc/client"
 	http_common "github.com/stehrn/hpc-poc/internal/http"
 	k8 "github.com/stehrn/hpc-poc/kubernetes"
 )
-
-var businessNames []string
-
-// BusinessNameOptions
-type BusinessNameOptions struct {
-	Name     string
-	Selected bool
-}
-
-// NewBusinessNameOptions
-func NewBusinessNameOptions(selected string) []BusinessNameOptions {
-	options := make([]BusinessNameOptions, len(businessNames))
-	for i, name := range businessNames {
-		var isOptSelected bool
-		if name == selected {
-			isOptSelected = true
-		}
-		options[i] = BusinessNameOptions{name, isOptSelected}
-	}
-	return options
-}
-
-func init() {
-	businessNames = client.BusinessNamesFromEnv()
-}
 
 type handlerContext struct {
 	client          *k8.Client

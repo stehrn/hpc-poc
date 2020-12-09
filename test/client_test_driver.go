@@ -115,8 +115,9 @@ func watch(messageID string) error {
 	err := k8Client.Watch(options, kubernetes.ANY, func(job *batchv1.Job) {
 		podStatus, _ := k8Client.LastPodStatus(job.Name)
 		log.Printf("Received update for Job %q, status: %v", job.Name, podStatus)
-		if kubernetes.SUCCESS(job.Status) {
-			log.Printf("Job %q succesfully finished", job.Name)
+		state, done := kubernetes.FINISHED(job.Status)
+		if done {
+			log.Printf("Job %q finished with state %s", job.Name, state)
 			wg.Done()
 		}
 	})

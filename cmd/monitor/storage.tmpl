@@ -10,38 +10,44 @@
     <link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="http://www.datatables.net/rss.xml">
 	  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
     <script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
-	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+  	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
 
     <script type="text/javascript" class="init">
-
-$(document).ready(function() {
-	$('#example').DataTable();
-} );
-
-	</script>
+      $(document).ready(function() {
+        $('#storage').DataTable( {
+          "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]]
+          } );
+        } );
+	  </script>
+    <style>
+      table.dataTable thead tr {
+        background-color: #EAEDED;
+      }
+    </style>
   </head>
   <body>
   {{template "navbar" .}}
   <div class="container-fluid">
   <div class="row">
-    <div class="col-sm bg-light">
-    <h2>Monitor (Buckets)</h2>    
+    <div class="col-sm">
+    <h3>Monitor (Storage)</h3>    
     <p class="lead">
-        <h6>Business: <span class="badge badge-secondary">{{ .Business }}</span></h6>
-        <h6>Bucket: <span class="badge badge-secondary">{{ .Bucket }}</span></h6>
+      <table>
+        <tr><td><h6>Business:</h6><td><td><h5><span class="badge badge-pill badge-secondary">{{ .Business }}</span></h5></td></tr>
+        <tr><td><h6>Bucket:</h6><td><td><h5><span class="badge badge-pill badge-secondary">{{ .Bucket }}</span></h5></td></tr>
+      </table>
     </p>
     {{template "option" .}}
-
     {{ if .Objects }}
     <div class="row">
      <div class="col-sm bg-light">
       <p class="lead">
       <h4>Objects</h4>
-      <table id="example" class="display" style="width:100%">
+      <table id="storage" class="cell-border compact" style="width:100%">
         <thead class="thead-light">
       	<tr>
           <th scope="col">Object</td>
-          <th scope="col">Size</td>
+          <th scope="col">Size (bytes)</td>
           <th scope="col">Created</td>
         </tr>
       </thead>
@@ -51,7 +57,7 @@ $(document).ready(function() {
       	  <tr>
             <td><a href="/storage/object/{{ .Object }}">{{ .Object }}</a></td>
             <td>{{ .Size }}</td>
-            <td>{{ .Created }}</td>
+            <td>{{ .Created.Format "Jan 02, 2006, 15:04:05 PM (MST)" }}</td>
           </tr>
         {{ end }} 
       	{{ end }}
