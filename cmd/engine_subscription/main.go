@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	"cloud.google.com/go/pubsub"
 	messaging "github.com/stehrn/hpc-poc/gcp/pubsub"
@@ -13,7 +14,7 @@ import (
 // Global API clients used across function invocations.
 var (
 	subClient     *messaging.Client
-	storageClient *storage.Client
+	storageClient *storage.ClientInterface
 )
 
 // init subcription client, requires: PROJECT_NAME, SUBSCRIPTION_NAME
@@ -53,7 +54,8 @@ func main() {
 				log.Fatalf("Failed to download object, error: %v", err)
 			}
 
-			log.Printf("Loaded data: %v", string(data))
+			log.Printf("Loaded data: %v, doing 3 seconds of work", string(data))
+			time.Sleep(3 * time.Second)
 
 			// to simulate engine failure
 			if string(data) == "PANIC" {

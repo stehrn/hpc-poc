@@ -28,7 +28,7 @@ func (ctx *handlerContext) JobHandler(w http.ResponseWriter, r *http.Request) er
 		return errors.New("No job sepcified")
 	}
 
-	job, err := ctx.client.Job(jobName)
+	job, err := ctx.client.FindJob(jobName)
 	if err != nil {
 		return err
 	}
@@ -40,14 +40,6 @@ func (ctx *handlerContext) JobHandler(w http.ResponseWriter, r *http.Request) er
 
 	ctx.jobTemplate.Execute(w, jobsTemplate{myJob{job}, pods})
 	return nil
-}
-
-// called from job.tmpl
-func (j jobsTemplate) LastPod() k8.PodStatus {
-	if len(j.Pods) != 0 {
-		return k8.NewPodStatus(j.Pods[0])
-	}
-	return k8.EmptyPodStatus()
 }
 
 // called from job.tmpl

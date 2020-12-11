@@ -9,16 +9,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// LatestPod get latest pod
-func (c Client) LatestPod(jobName string) (apiv1.Pod, error) {
-	pods, err := c.Pods(jobName)
-	if err != nil {
-		return apiv1.Pod{}, err
-	}
-	if len(pods) > 0 {
-		return pods[0], nil
-	}
-	return apiv1.Pod{}, nil
+// PodInterface pod specific functions
+type PodInterface interface {
+	Pods(jobName string) ([]apiv1.Pod, error)
+	LogsForPod(podName string) (string, error)
 }
 
 // Pods get Pods for given job name
@@ -51,5 +45,3 @@ func (c Client) LogsForPod(podName string) (string, error) {
 	}
 	return buf.String(), nil
 }
-
-

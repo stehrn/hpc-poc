@@ -19,16 +19,14 @@ var myClient *client.Client
 
 // Upload test data to cluster
 // Set env variables:
-// GOOGLE_APPLICATION_CREDENTIALS
-// KUBE_CONFIG
 //
-// e.g.:
 // export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/key.json
 // export KUBE_CONFIG=${HOME}/.kube/config
 //
 // Example usage when running locally:
 //
-// go run client_test_driver.go -business=bu1 --project=hpc-poc --bucket=hpc-poc-bucket --namespace=default --session=session-a --numJobs=3
+//     go run client_test_driver.go -business=bu1 --project=hpc-poc --bucket=hpc-poc-bucket --namespace=default --session=session-a --numJobs=3
+//     go run client_test_driver.go -business=bu1 --project=hpc-poc --bucket=hpc-poc-bucket --namespace=default --session=session-a --numTasks=3
 //
 func main() {
 
@@ -113,11 +111,10 @@ func watch(messageID string) error {
 
 	options := metav1.ListOptions{LabelSelector: fmt.Sprintf("gcp.pubsub.subscription_id=%s", messageID)}
 	err := k8Client.Watch(options, kubernetes.ANY, func(job *batchv1.Job) {
-		podStatus, _ := k8Client.LastPodStatus(job.Name)
-		log.Printf("Received update for Job %q, status: %v", job.Name, podStatus)
 		state, done := kubernetes.FINISHED(job.Status)
+		log.Printf("Received update for Job %q, status: %v", job.Name, state)
 		if done {
-			log.Printf("Job %q finished with state %s", job.Name, state)
+			log.Printf("Job %q finished", job.Name)
 			wg.Done()
 		}
 	})

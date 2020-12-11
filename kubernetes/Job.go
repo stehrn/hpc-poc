@@ -13,6 +13,14 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
+// JobInterface Job specific functions
+type JobInterface interface {
+	FindJob(jobName string) (*batchv1.Job, error)
+	ListJobs(options metav1.ListOptions) (*batchv1.JobList, error)
+	CreateJob(options JobOptions) (*batchv1.Job, error)
+	Watch(filter metav1.ListOptions, predicate func(status batchv1.JobStatus) bool, callback func(job *batchv1.Job)) error
+}
+
 // JobOptions details of job to create
 type JobOptions struct {
 	Name        string
@@ -20,6 +28,15 @@ type JobOptions struct {
 	Parallelism int32
 	Labels      map[string]string
 	Env         []apiv1.EnvVar
+}
+
+// FindJob load Job for given job name
+func (c Client) FindJob(jobName string) (*batchv1.Job, error) {
+	result, err := c.jobsClient().Get(jobName, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed to get job: '%s'", jobName)
+	}
+	return result, nil
 }
 
 // ListJobs list all jobs
@@ -101,35 +118,4 @@ func (c Client) Watch(filter metav1.ListOptions, predicate func(status batchv1.J
 		}
 	}()
 	return nil
-}
-
-// Job load Job for given job name
-func (c Client) Job(jobName string) (*batchv1.Job, error) {
-	result, err := c.jobsClient().Get(jobName, metav1.GetOptions{})
-	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to get job: '%s'", jobName)
-	}
-	return result, nil
-}
-
-// LastPodStatus get status of last Pod in Job
-func (c Client) LastPodStatus(job string) (PodStatus, error) {
-	pod, err := c.LatestPod(job)
-	if err != nil {
-		return PodStatus{}, err
-	}
-	return NewPodStatus(pod), nil
-}
-
-// LogsForJob get logs for job name
-func (c Client) LogsForJob(jobName string) (string, error) {
-	pod, err := c.LatestPod(jobName)
-	if err != nil {
-		return "", errors.Wrapf(err, "Failed to load logs for job '%s'", jobName)
-	}
-	log, err := c.LogsForPod(pod.Name)
-	if err != nil {
-		return "", errors.Wrapf(err, "Failed to load logs for job '%s'", jobName)
-	}
-	return log, nil
 }

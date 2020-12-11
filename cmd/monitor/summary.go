@@ -6,7 +6,6 @@ import (
 
 	k8 "github.com/stehrn/hpc-poc/kubernetes"
 
-	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -18,19 +17,12 @@ type summaryTemplate struct {
 	Page                string
 }
 
-type podSummary struct {
-	Name      string
-	Status    string
-	LastState apiv1.PodCondition
-}
-
 type jobSummary struct {
 	Name           string
 	Status         k8.JobState
 	StartTime      string
 	CompletionTime string
 	Duration       string
-	Pod            podSummary
 }
 
 func (ctx *handlerContext) SummaryHandler(w http.ResponseWriter, r *http.Request) error {
@@ -65,27 +57,11 @@ func summary(business string, client *k8.Client) (summaryTemplate, error) {
 			Status:         k8.GetJobState(item.Status),
 			StartTime:      k8.ToString(item.Status.StartTime),
 			CompletionTime: k8.ToString(item.Status.CompletionTime),
-			Duration:       k8.Duration(item.Status.StartTime, item.Status.CompletionTime),
-			Pod:            summaryForPod(client, item.Name)}
+			Duration:       k8.Duration(item.Status.StartTime, item.Status.CompletionTime)}
 		jobs = append(jobs, job)
 	}
 	return summaryTemplate{
 		Namespace:           client.Namespace,
 		BusinessNameOptions: NewBusinessNameOptions(business),
 		Jobs:                jobs}, nil
-}
-
-// Last Pod State (type/reason/message)
-func summaryForPod(client *k8.Client, jobName string) podSummary {
-	pod, _ := client.LatestPod(jobName)
-	podStatus := pod.Status
-	conditions := podStatus.Conditions
-	var lastState = apiv1.PodCondition{}
-	if len(conditions) != 0 {
-		lastState = conditions[0]
-	}
-	return podSummary{
-		Name:      pod.Name,
-		Status:    string(podStatus.Phase),
-		LastState: lastState}
 }

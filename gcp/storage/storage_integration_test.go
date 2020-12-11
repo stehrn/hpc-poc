@@ -8,6 +8,7 @@ package storage
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -15,9 +16,9 @@ import (
 // export CLOUD_STORAGE_BUCKET_NAME=hpc-poc-bucket
 // export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/key.json
 
-const business = "int-test"
+const business = "integration-test"
 
-var client *Client
+var client StorageClient
 var location Location
 var uploaded bool
 
@@ -34,7 +35,7 @@ func Test(t *testing.T) {
 	t.Log("Creating new client")
 	client, err = NewEnvClient()
 	if err != nil {
-		t.Error("Could not create client", err)
+		t.Fatal("Could not create client", err)
 	}
 
 	location = client.Location(business)
@@ -43,22 +44,22 @@ func Test(t *testing.T) {
 	data := []byte("abc")
 	err = client.Upload(location, data)
 	if err != nil {
-		t.Error("Could not upload data", err)
+		t.Fatal("Could not upload data", err)
 	}
 	uploaded = true
 
 	t.Logf("Downloading from %q", location)
 	download, err := client.Download(location)
 	if err != nil {
-		t.Error("Could not download data", err)
+		t.Fatal("Could not download data", err)
 	}
 
 	if !bytes.Equal(data, download) {
-		t.Errorf("Download failed, got: %s, want: %s", string(download), string(data))
+		t.Errorf("Download looks odd, got: %s, want: %s", string(download), string(data))
 	}
 
 	t.Logf("Listing storage objects for business %q", business)
-	objects, err := client.ListStorageObjects(business)
+	objects, err := client.ListObjects(business)
 	if err != nil {
 		t.Error("Could not list objects", err)
 	}
@@ -79,7 +80,7 @@ func Test(t *testing.T) {
 	}
 
 	t.Logf("Checking storage object deleted")
-	objects, err = client.ListStorageObjects(business)
+	objects, err = client.ListObjects(business)
 	if err != nil {
 		t.Error("Could not list objects", err)
 	}
@@ -87,10 +88,13 @@ func Test(t *testing.T) {
 	if len(objects) != 0 {
 		t.Errorf("Expected zero objects, got: %v", objects)
 	}
+
+	t.Log("Test ok")
 }
 
 func teardown() {
 	if uploaded {
+		fmt.Printf("Deleting %v", location)
 		client.Delete(location)
 	}
 }

@@ -6,24 +6,16 @@ import (
 	"strings"
 )
 
-// view logs for job or pod
-// url expected to be one of:
-//    /logs/job/<job name>
-//    /logs/pod/<pod name>
+// view logs for pod
+// url: /logs/pod/<pod name>
 func (ctx *handlerContext) LogsHandler(w http.ResponseWriter, r *http.Request) error {
 	split := strings.Split(r.URL.Path, "/")
-	objectType := split[2]
 	name := split[3]
-
-	var logs string
-	var err error
-	if objectType == "job" {
-		logs, err = ctx.client.LogsForJob(name)
-	} else if objectType == "pod" {
-		logs, err = ctx.client.LogsForPod(name)
-	} else {
-		return fmt.Errorf("Unkown object type: %v (expeded 'job' or 'pod')", objectType)
+	if name == "" {
+		return fmt.Errorf("Missing pod name in uri: %v", r.URL.Path)
 	}
+
+	logs, err := ctx.client.LogsForPod(name)
 
 	if err != nil {
 		return err

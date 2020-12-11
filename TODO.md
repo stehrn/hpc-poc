@@ -34,3 +34,12 @@ func Status(status batchv1.JobStatus) string {
 	return "Unkonwn"
 }
 
+ {{ $lastPod := .LastPod }}
+      {{if $lastPod.IsError }}
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ $lastPod.Condition.Reason }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      {{end}}

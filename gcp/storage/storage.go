@@ -12,55 +12,52 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-// Object compact representation of a storage object
-type Object struct {
-	Object  string
-	Size    int64
-	Created time.Time
-}
+const timeout = time.Second * 50
 
-// List list contents of bucket
-// equivallent to: gsutil ls -r gs://c.BucketName/prefix**
-func (c *Client) List(prefix string) *storage.ObjectIterator {
-
+// ForEachObject iterate over each storage object, whic his passed to consumer
+func (c *Client) ForEachObject(prefix string, consumer func(attrs *storage.ObjectAttrs)) error {
 	ctx := context.Background()
 
-	// ctx, cancel := context.WithTimeout(ctx, time.Second*10)
-	// defer cancel()
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	var query *storage.Query
 	if prefix != "" {
 		query = &storage.Query{Prefix: prefix}
 	}
-	return c.Bucket(c.BucketName).Objects(ctx, query)
-}
 
-// ListStorageObjects list storage objects
-func (c *Client) ListStorageObjects(prefix string) ([]Object, error) {
-	var objects []Object
-	it := c.List(prefix)
+	it := c.Bucket(c.BucketName()).Objects(ctx, query)
 	for {
 		attrs, err := it.Next()
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("ListStorageObjects for prefix: '%s', error: %v", prefix, err)
+			return fmt.Errorf("ListStorageObjects for prefix: '%s', error: %v", prefix, err)
 		}
+		consumer(attrs)
+	}
+	return nil
+}
+
+// ListObjects list storage objects
+func (c *Client) ListObjects(prefix string) ([]Object, error) {
+	var objects []Object
+	err := c.ForEachObject(prefix, func(attrs *storage.ObjectAttrs) {
 		object := Object{
 			Object:  attrs.Name,
 			Size:    attrs.Size,
 			Created: attrs.Created}
 		objects = append(objects, object)
-	}
-	return objects, nil
+	})
+	return objects, err
 }
 
 // Upload upload object to Cloud Storage bucket
 func (c *Client) Upload(location Location, content []byte) error {
 	ctx := context.Background()
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	// Upload an object with storage.Writer.
@@ -78,7 +75,7 @@ func (c *Client) Upload(location Location, content []byte) error {
 func (c *Client) Download(location Location) ([]byte, error) {
 	ctx := context.Background()
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	rc, err := c.Bucket(location.Bucket).Object(location.Object).NewReader(ctx)
@@ -95,10 +92,10 @@ func (c *Client) Download(location Location) ([]byte, error) {
 }
 
 // Delete delete object at given location
-func (c Client) Delete(location Location) error {
+func (c *Client) Delete(location Location) error {
 	ctx := context.Background()
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	return c.Bucket(location.Bucket).Object(location.Object).Delete(ctx)

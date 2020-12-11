@@ -15,7 +15,7 @@ var pubsubClients = make(map[Business]*pubsub.Client)
 // Client client
 type Client struct {
 	Project string
-	Storage *storage.Client
+	Storage storage.ClientInterface
 }
 
 // NewEnvClientOrFatal create new client from env

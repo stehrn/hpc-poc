@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"os"
-	"strconv"
 	"strings"
 
 	"cloud.google.com/go/pubsub"
@@ -27,12 +25,14 @@ import (
 var (
 	k8Client       *k8.Client
 	subClient      *messaging.Client
-	storageClient  *storage.Client
+	storageClient  *storage.StorageClient
 	business       client.Business
 	taskLoadFactor float64
+	maxPodsPerJob  int
 )
 
 const defaultTaskLoadFactor = 0.2
+const defaultMaxPodsPerJob = 100
 
 // init k8 client
 func init() {
@@ -66,18 +66,8 @@ func init() {
 
 // init task load factor
 func init() {
-	factorEnv := os.Getenv("TASK_LOAD_FACTOR")
-	if factorEnv != "" {
-		var err error
-		taskLoadFactor, err = strconv.ParseFloat(factorEnv, 64)
-		if err != nil {
-			log.Fatalf("Could not convert SCALING_FACTOR %s into float64: %v", factorEnv, err)
-		}
-		log.Printf("Task load factor set to %f", taskLoadFactor)
-	} else {
-		taskLoadFactor = defaultTaskLoadFactor
-		log.Printf("Task load factor set to default value of %f", taskLoadFactor)
-	}
+	taskLoadFactor = utils.EnvAsFloat("TASK_LOAD_FACTOR", defaultTaskLoadFactor)
+	maxPodsPerJob = utils.EnvAsFloat("MAX_PODS_PER_JOB", defaultMaxPodsPerJob)
 }
 
 func main() {
@@ -172,7 +162,7 @@ func publishToTempTopic(location storage.Location) (string, int32, error) {
 
 	// get slice of storage locations
 	directory := strings.Trim(location.Object, "/")
-	objects, err := storageClient.ListStorageObjects(directory)
+	objects, err := storageClient.ListObjects(directory)
 	if err != nil {
 		return "", 0, err
 	}
@@ -236,10 +226,10 @@ func subscriptionEnv(bucket, project, subscription string) []apiv1.EnvVar {
 		}}
 }
 
-func labels(location storage.Location, tasks, messageID string) map[string]string {
+func labels(location storage.Location, taskCount, messageID string) map[string]string {
 	labels := make(map[string]string)
 	labels["business"] = string(business)
-	labels["task.count"] = string(tasks)
+	labels["task.count"] = string(taskCount)
 	labels["task.load.factor"] = fmt.Sprint(taskLoadFactor)
 	labels["k8.namespace"] = k8Client.Namespace
 	labels["gcp.storage.bucket"] = location.Bucket

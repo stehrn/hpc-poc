@@ -76,7 +76,7 @@ func main() {
 
 	port := http_common.Port()
 	log.Printf("Client created for project: %s, business names: %v, bucket: %s; listening on port %s",
-		client.Project, businessNames, client.Storage.BucketName, port)
+		client.Project, businessNames, client.Storage.BucketName(), port)
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)

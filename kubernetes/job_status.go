@@ -46,7 +46,7 @@ func SUCCESS(status batchv1.JobStatus) bool {
 	return GetJobState(status) == Complete
 }
 
-// FINISHED return true is Job has finished
+// FINISHED return true is Job has finished (either succesfully or failed)
 func FINISHED(status batchv1.JobStatus) (JobState, bool) {
 	state := GetJobState(status)
 	finished := !state.IsRunning()

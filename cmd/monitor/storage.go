@@ -9,7 +9,7 @@ import (
 	"github.com/stehrn/hpc-poc/gcp/storage"
 )
 
-var storageClient *storage.Client
+var storageClient storage.ClientInterface
 
 type storageTemplate struct {
 	Business            string
@@ -79,13 +79,13 @@ func (ctx *handlerContext) StorageHandler(w http.ResponseWriter, r *http.Request
 
 func (ctx *handlerContext) objects(business string, w http.ResponseWriter) error {
 	log.Printf("Listing objects for bucket: %s, business: %s", storageClient.BucketName, business)
-	objects, err := storageClient.ListStorageObjects(business)
+	objects, err := storageClient.ListObjects(business)
 	if err != nil {
 		return err
 	}
 	return ctx.storageTemplate.Execute(w, storageTemplate{
 		Business:            business,
-		Bucket:              storageClient.BucketName,
+		Bucket:              storageClient.BucketName(),
 		Objects:             objects,
 		BusinessNameOptions: NewBusinessNameOptions(business),
 		Page:                "storage",
