@@ -31,13 +31,22 @@ func (c Client) NewTempPubSub(ID string) (*TempPubSub, error) {
 		return nil, fmt.Errorf("CreateSubscription: %v", err)
 	}
 
+	return c.client(subID, topicID), nil
+}
+
+func (c Client) client(subID, topicID string) *TempPubSub {
 	config := &ClientConfg{
 		Project:        c.Project,
 		SubscriptionID: subID,
 		TopicName:      topicID}
-	client := &Client{config, c.Client}
+	return &TempPubSub{&Client{config, c.Client}}
+}
 
-	return &TempPubSub{client}, nil
+// ExistingTempPubSub load existing TempPubSub
+func (c Client) ExistingTempPubSub(ID string) *TempPubSub {
+	topicID := fmt.Sprintf("%s-topic", ID)
+	subID := fmt.Sprintf("%s-subscription", ID)
+	return c.client(subID, topicID)
 }
 
 // TopicName topic name
@@ -50,8 +59,8 @@ func (t *TempPubSub) SubscriptionID() string {
 	return t.client.SubscriptionID
 }
 
-// Publish publish to temp topic
-func (t *TempPubSub) Publish(payloads [][]byte) error {
+// PublishMany publish to temp topic
+func (t *TempPubSub) PublishMany(payloads [][]byte) error {
 	return t.client.PublishMany(payloads)
 }
 

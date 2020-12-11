@@ -15,12 +15,10 @@ func (ctx *handlerContext) LogsHandler(w http.ResponseWriter, r *http.Request) e
 		return fmt.Errorf("Missing pod name in uri: %v", r.URL.Path)
 	}
 
-	logs, err := ctx.client.LogsForPod(name)
-
+	logs, err := ctx.client.PodLogs(name)
 	if err != nil {
 		return err
 	}
-
 	_, err = w.Write([]byte(logs))
 	return err
 }

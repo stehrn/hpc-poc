@@ -23,12 +23,12 @@ import (
 
 // Global API clients used across function invocations.
 var (
-	k8Client       *k8.Client
+	k8Client       k8.ClientInterface
 	subClient      *messaging.Client
-	storageClient  *storage.StorageClient
+	storageClient  storage.ClientInterface
 	business       client.Business
 	taskLoadFactor float64
-	maxPodsPerJob  int
+	maxPodsPerJob  int64
 )
 
 const defaultTaskLoadFactor = 0.2
@@ -67,7 +67,7 @@ func init() {
 // init task load factor
 func init() {
 	taskLoadFactor = utils.EnvAsFloat("TASK_LOAD_FACTOR", defaultTaskLoadFactor)
-	maxPodsPerJob = utils.EnvAsFloat("MAX_PODS_PER_JOB", defaultMaxPodsPerJob)
+	maxPodsPerJob = utils.EnvAsInt("MAX_PODS_PER_JOB", defaultMaxPodsPerJob)
 }
 
 func main() {
@@ -76,65 +76,50 @@ func main() {
 	subscribe()
 }
 
-// TODO: this blindly tries to delete stuff already deleted when service 1st run
-func startJobWatcher() {
-	log.Print("Startng job watcher")
-	var err error
-
-	options := metav1.ListOptions{LabelSelector: fmt.Sprintf("business=%s", string(business))}
-	err = k8Client.Watch(options, kubernetes.SUCCESS, func(job *batchv1.Job) {
-		location := storage.Location{
-			Bucket: job.Labels["gcp.storage.bucket"],
-			Object: reverseClean(job.Labels["gcp.storage.object"]),
-		}
-		log.Printf("Deleting cloud storage data at location: %v", location)
-		err = storageClient.Delete(location)
-		if err != nil {
-			log.Printf("Failed to delete object at location: %v, error: %v", location, err)
-		}
-	})
-	if err != nil {
-		log.Fatal("Could not start watching jobs", err)
-	}
-}
-
 func subscribe() {
 	log.Print("Startng subscriber")
 	imageRegistry := utils.Env("IMAGE_REGISTRY")
 
 	err := subClient.Subscribe(func(ctx context.Context, m *pubsub.Message) {
-		location, err := storage.ToLocation(m.Data)
+		jobLocation, err := storage.ToLocation(m.Data)
 		if err != nil {
 			log.Printf("Could not get location from message data (%v), error: %v", m.Data, err)
 			return
 		}
 
-		strategy := strategy(location)
-		var engineImage string
-		var numTasks, parallelism int32
+		var imageName string
 		var env []apiv1.EnvVar
-		if strategy == "storage" {
-			env = storageEnv(location)
-			numTasks = 1
-			parallelism = 1
+
+		taskLocations, err := loadJobData(jobLocation)
+		if err != nil {
+			log.Printf("Could not load job data (tasks) at location %q, error: %v", jobLocation, err)
+			return
+		}
+
+		numTasks := len(taskLocations)
+		parallelism := parallelism(numTasks)
+
+		if parallelism == 1 {
+			imageName = "engine_storage"
+			env = storageEnv(jobLocation)
 		} else {
-			var subscriptionID string
-			subscriptionID, numTasks, err = publishToTempTopic(location)
+			ID := pubSubID(jobLocation.Object)
+			jobPub, err := publishToJobTopic(ID, taskLocations)
 			if err != nil {
-				log.Printf("Could not create subscription for location %q, error: %v", location, err)
+				log.Printf("Could not publish task locations, error: %v", err)
 				return
 			}
-			parallelism = int32(math.Max(float64(numTasks)*float64(taskLoadFactor), 1.0))
-			log.Printf("Parallelism set to %d, (numtasks * taskLoadFactor) = (%d * %f)", parallelism, numTasks, taskLoadFactor)
-			env = subscriptionEnv(storageClient.BucketName, subClient.Project, subscriptionID)
+			imageName = "engine_subscription"
+			env = subscriptionEnv(storageClient.BucketName(), subClient.Project, jobPub.SubscriptionID())
 		}
-		engineImage = fmt.Sprintf("%s/engine_%s:latest", imageRegistry, strategy)
+
+		engineImage := fmt.Sprintf("%s/%s:latest", imageRegistry, imageName)
 
 		options := k8.JobOptions{
 			Name:        "engine-job-" + m.ID,
 			Image:       engineImage,
 			Parallelism: parallelism,
-			Labels:      labels(location, fmt.Sprint(numTasks), m.ID),
+			Labels:      labels(jobLocation, fmt.Sprint(numTasks), m.ID),
 			Env:         env}
 		log.Printf("Creating Job with options: %v", options)
 		_, err = k8Client.CreateJob(options)
@@ -150,42 +135,83 @@ func subscribe() {
 	}
 }
 
-// TODO
-func strategy(location storage.Location) string {
-	if !strings.HasPrefix(location.Object, "bu1") {
-		return "subscription"
+// TODO: this blindly tries to delete stuff already deleted when service 1st run if Jobs still around
+func startJobWatcher() {
+	log.Print("Startng job watcher")
+	var err error
+
+	options := metav1.ListOptions{LabelSelector: fmt.Sprintf("business=%s", string(business))}
+	err = k8Client.Watch(options, kubernetes.SUCCESS, func(job *batchv1.Job) {
+
+		labels := Labels{job.Labels}
+		object := labels.storageObject()
+
+		jobLocation := storage.Location{
+			Bucket: labels.storageBucket(),
+			Object: object,
+		}
+		log.Printf("Deleting cloud storage data at location: %v", jobLocation)
+		err = storageClient.Delete(jobLocation)
+		if err != nil {
+			log.Printf("Failed to delete object at location: %v, error: %v", jobLocation, err)
+		}
+		ID := pubSubID(jobLocation.Object)
+		log.Printf("Deleting job pubsub ID %q", ID)
+		err := subClient.ExistingTempPubSub(ID).Delete()
+		if err != nil {
+			log.Printf("Error deleting job pubsub ID %q, error: %v", ID, err)
+		}
+	})
+	if err != nil {
+		log.Fatal("Could not start watching jobs", err)
 	}
-	return "storage"
 }
 
-func publishToTempTopic(location storage.Location) (string, int32, error) {
+func parallelism(numTasks int) int32 {
+	if numTasks == 1 {
+		return 1
+	}
+	parallelism := int32(math.Max(float64(numTasks)*float64(taskLoadFactor), 1.0))
+	log.Printf("Parallelism set to %d, (numtasks * taskLoadFactor) = (%d * %f)", parallelism, numTasks, taskLoadFactor)
+	return parallelism
+}
 
+// do an 'ls" on job storage directory and create location for each, convert to bytes
+func loadJobData(location storage.Location) ([][]byte, error) {
 	// get slice of storage locations
 	directory := strings.Trim(location.Object, "/")
 	objects, err := storageClient.ListObjects(directory)
 	if err != nil {
-		return "", 0, err
+		return nil, err
 	}
 	data, err := storageClient.ToLocationByteSlice(objects)
 	if err != nil {
-		return "", 0, err
+		return nil, err
 	}
 	log.Printf("Loaded %d storage objects from %s", len(data), directory)
+	return data, nil
+}
 
-	// create temp topic and subscription and publish locations
-	ID := strings.ReplaceAll(location.Object, "/", "-")
+func pubSubID(object string) string {
+	return strings.ReplaceAll(object, "/", "-")
+}
+
+// create temp topic (and subscription for engines) and publish tasks locations
+func publishToJobTopic(ID string, taskLocations [][]byte) (*messaging.TempPubSub, error) {
 	tmpPubSub, err := subClient.NewTempPubSub(ID)
 	if err != nil {
-		return "", 0, err
+		return nil, err
 	}
 
-	err = tmpPubSub.Publish(data)
+	err = tmpPubSub.PublishMany(taskLocations)
 	if err != nil {
-		return "", 0, err
+		log.Printf("Error publishing locations, deleting tmp pubsub %s, error: %v", tmpPubSub.SubscriptionID(), err)
+		err := tmpPubSub.Delete()
+		return nil, err
 	}
-	log.Printf("Published to topic %q", tmpPubSub.TopicName())
+	log.Printf("Published %d messages to topic %q", len(taskLocations), tmpPubSub.TopicName())
 
-	return tmpPubSub.SubscriptionID(), int32(len(data)), nil
+	return tmpPubSub, nil
 }
 
 // storageEnv env variables for storage based engine
@@ -224,26 +250,4 @@ func subscriptionEnv(bucket, project, subscription string) []apiv1.EnvVar {
 			Name:  "SUBSCRIPTION_NAME",
 			Value: subscription,
 		}}
-}
-
-func labels(location storage.Location, taskCount, messageID string) map[string]string {
-	labels := make(map[string]string)
-	labels["business"] = string(business)
-	labels["task.count"] = string(taskCount)
-	labels["task.load.factor"] = fmt.Sprint(taskLoadFactor)
-	labels["k8.namespace"] = k8Client.Namespace
-	labels["gcp.storage.bucket"] = location.Bucket
-	labels["gcp.storage.object"] = clean(location.Object)
-	labels["gcp.pubsub.project"] = subClient.Project
-	labels["gcp.pubsub.subscription"] = subClient.SubscriptionID
-	labels["gcp.pubsub.subscription_id"] = messageID
-	return labels
-}
-
-func clean(item string) string {
-	return strings.ReplaceAll(item, "/", "_")
-}
-
-func reverseClean(item string) string {
-	return strings.ReplaceAll(item, "_", "/")
 }

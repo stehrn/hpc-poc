@@ -78,7 +78,7 @@ func (ctx *handlerContext) StorageHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (ctx *handlerContext) objects(business string, w http.ResponseWriter) error {
-	log.Printf("Listing objects for bucket: %s, business: %s", storageClient.BucketName, business)
+	log.Printf("Listing objects for bucket: %s, business: %s", storageClient.BucketName(), business)
 	objects, err := storageClient.ListObjects(business)
 	if err != nil {
 		return err

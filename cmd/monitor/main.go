@@ -12,7 +12,7 @@ import (
 )
 
 type handlerContext struct {
-	client          *k8.Client
+	client          k8.ClientInterface
 	summaryTemplate *template.Template
 	jobTemplate     *template.Template
 	storageTemplate *template.Template

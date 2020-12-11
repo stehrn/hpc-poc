@@ -14,6 +14,19 @@ import (
 
 const timeout = time.Second * 50
 
+// ListObjects list storage objects
+func (c *Client) ListObjects(prefix string) ([]Object, error) {
+	var objects []Object
+	err := c.ForEachObject(prefix, func(attrs *storage.ObjectAttrs) {
+		object := Object{
+			Object:  attrs.Name,
+			Size:    attrs.Size,
+			Created: attrs.Created}
+		objects = append(objects, object)
+	})
+	return objects, err
+}
+
 // ForEachObject iterate over each storage object, whic his passed to consumer
 func (c *Client) ForEachObject(prefix string, consumer func(attrs *storage.ObjectAttrs)) error {
 	ctx := context.Background()
@@ -38,19 +51,6 @@ func (c *Client) ForEachObject(prefix string, consumer func(attrs *storage.Objec
 		consumer(attrs)
 	}
 	return nil
-}
-
-// ListObjects list storage objects
-func (c *Client) ListObjects(prefix string) ([]Object, error) {
-	var objects []Object
-	err := c.ForEachObject(prefix, func(attrs *storage.ObjectAttrs) {
-		object := Object{
-			Object:  attrs.Name,
-			Size:    attrs.Size,
-			Created: attrs.Created}
-		objects = append(objects, object)
-	})
-	return objects, err
 }
 
 // Upload upload object to Cloud Storage bucket

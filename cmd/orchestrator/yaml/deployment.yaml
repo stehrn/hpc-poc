@@ -30,7 +30,7 @@ spec:
         - name: BUSINESS_NAME
           value: bu3
         - name: TASK_LOAD_FACTOR
-          value: "0.1"
+          value: "0.5"
         - name: MAX_PODS_PER_JOB
           value: "100"
         - name: PROJECT_NAME

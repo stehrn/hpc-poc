@@ -13,12 +13,17 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
-// JobInterface Job specific functions
+// JobWatcher watch a job
+type JobWatcher interface {
+	Watch(filter metav1.ListOptions, predicate func(status batchv1.JobStatus) bool, callback func(job *batchv1.Job)) error
+}
+
+// JobInterface has methods to work with Jobs
 type JobInterface interface {
 	FindJob(jobName string) (*batchv1.Job, error)
 	ListJobs(options metav1.ListOptions) (*batchv1.JobList, error)
 	CreateJob(options JobOptions) (*batchv1.Job, error)
-	Watch(filter metav1.ListOptions, predicate func(status batchv1.JobStatus) bool, callback func(job *batchv1.Job)) error
+	JobWatcher
 }
 
 // JobOptions details of job to create
@@ -53,7 +58,7 @@ func (c Client) CreateJob(options JobOptions) (*batchv1.Job, error) {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      options.Name,
-			Namespace: c.Namespace,
+			Namespace: c.Namespace(),
 			Labels:    options.Labels,
 		},
 		Spec: batchv1.JobSpec{

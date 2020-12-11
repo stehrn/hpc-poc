@@ -11,13 +11,6 @@ import (
 	gcp "cloud.google.com/go/storage"
 )
 
-// Object compact representation of a storage object
-type Object struct {
-	Object  string
-	Size    int64
-	Created time.Time
-}
-
 // ClientInterface defines API client methods for storage
 type ClientInterface interface {
 	BucketName() string
@@ -33,6 +26,14 @@ type ClientInterface interface {
 type LocationClient interface {
 	Location(business string) Location
 	LocationForObject(object string) Location
+	ToLocationByteSlice(objects []Object) ([][]byte, error)
+}
+
+// Object compact representation of a storage object
+type Object struct {
+	Object  string
+	Size    int64
+	Created time.Time
 }
 
 // Client storage client implements ClientInterface

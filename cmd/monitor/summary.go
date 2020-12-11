@@ -29,7 +29,7 @@ func (ctx *handlerContext) SummaryHandler(w http.ResponseWriter, r *http.Request
 	switch r.Method {
 	case "GET":
 		summary := summaryTemplate{
-			Namespace:           ctx.client.Namespace,
+			Namespace:           ctx.client.Namespace(),
 			BusinessNameOptions: NewBusinessNameOptions(""),
 			Page:                "summary"}
 		ctx.summaryTemplate.Execute(w, summary)
@@ -44,7 +44,7 @@ func (ctx *handlerContext) SummaryHandler(w http.ResponseWriter, r *http.Request
 	return nil
 }
 
-func summary(business string, client *k8.Client) (summaryTemplate, error) {
+func summary(business string, client k8.ClientInterface) (summaryTemplate, error) {
 	var jobs []jobSummary
 	options := metav1.ListOptions{LabelSelector: fmt.Sprintf("business=%s", business)}
 	jobList, err := client.ListJobs(options)
@@ -61,7 +61,7 @@ func summary(business string, client *k8.Client) (summaryTemplate, error) {
 		jobs = append(jobs, job)
 	}
 	return summaryTemplate{
-		Namespace:           client.Namespace,
+		Namespace:           client.Namespace(),
 		BusinessNameOptions: NewBusinessNameOptions(business),
 		Jobs:                jobs}, nil
 }

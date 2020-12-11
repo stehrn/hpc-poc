@@ -13,9 +13,16 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// ClientInterface defines API client methods for kubernetes
+type ClientInterface interface {
+	Namespace() string
+	JobInterface
+	PodInterface
+}
+
 // Client can be used to create and list kubernete Jobs
 type Client struct {
-	Namespace string
+	namespace string
 	clientSet *kubernetes.Clientset
 }
 
@@ -37,9 +44,14 @@ func NewClient(namespace string) (*Client, error) {
 	return &Client{namespace, clientset}, nil
 }
 
+// Namespace get namespace
+func (c *Client) Namespace() string {
+	return c.namespace
+}
+
 // create Job Batch client
 func (c Client) jobsClient() v1.JobInterface {
-	return c.clientSet.BatchV1().Jobs(c.Namespace)
+	return c.clientSet.BatchV1().Jobs(c.Namespace())
 }
 
 func clientset() (*kubernetes.Clientset, error) {

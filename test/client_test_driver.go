@@ -14,7 +14,7 @@ import (
 )
 
 var wg sync.WaitGroup
-var k8Client *kubernetes.Client
+var jobWatcher kubernetes.JobWatcher
 var myClient *client.Client
 
 // Upload test data to cluster
@@ -45,7 +45,7 @@ func main() {
 	fmt.Scanln()
 
 	var err error
-	k8Client, err = kubernetes.NewClient(*namespace)
+	jobWatcher, err = kubernetes.NewClient(*namespace)
 	if err != nil {
 		panic(err)
 	}
@@ -109,8 +109,8 @@ func manyTasks(numTasks int, business, session string) {
 func watch(messageID string) error {
 	log.Printf("Listening to subscription %q", messageID)
 
-	options := metav1.ListOptions{LabelSelector: fmt.Sprintf("gcp.pubsub.subscription_id=%s", messageID)}
-	err := k8Client.Watch(options, kubernetes.ANY, func(job *batchv1.Job) {
+	options := metav1.ListOptions{LabelSelector: fmt.Sprintf("gcp.pubsub.subscription.id=%s", messageID)}
+	err := jobWatcher.Watch(options, kubernetes.ANY, func(job *batchv1.Job) {
 		state, done := kubernetes.FINISHED(job.Status)
 		log.Printf("Received update for Job %q, status: %v", job.Name, state)
 		if done {
