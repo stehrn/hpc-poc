@@ -43,3 +43,13 @@ func Status(status batchv1.JobStatus) string {
         </button>
       </div>
       {{end}}
+
+
+
+open census
+
+client
+
+
+var ErrNotFound = errors.New("not found")
+        return nil, fmt.Errorf("%q: %w", name, ErrNotFound)

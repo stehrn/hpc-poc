@@ -11,7 +11,6 @@ import (
 type ClientConfg struct {
 	Project        string
 	SubscriptionID string
-	TopicName      string
 }
 
 // Client pubsub client
@@ -21,16 +20,11 @@ type Client struct {
 }
 
 // NewPubClient create new client for subscriptions
-func NewPubClient(project, topic string) (*Client, error) {
+func NewPubClient(project string) (*Client, error) {
 	if project == "" {
 		return nil, errors.New("Missing project")
 	}
-	if topic == "" {
-		return nil, errors.New("Missing topic")
-	}
-	return create(&ClientConfg{
-		Project:   project,
-		TopicName: topic})
+	return create(&ClientConfg{Project: project})
 }
 
 // NewSubClient create new client for subscriptions

@@ -13,7 +13,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/stehrn/hpc-poc/client"
+	"github.com/stehrn/hpc-poc/executor"
 	messaging "github.com/stehrn/hpc-poc/gcp/pubsub"
 	"github.com/stehrn/hpc-poc/gcp/storage"
 	"github.com/stehrn/hpc-poc/internal/utils"
@@ -23,16 +23,22 @@ import (
 
 // Global API clients used across function invocations.
 var (
+	gcpContext     *executor.GcpContext
 	k8Client       k8.ClientInterface
 	subClient      *messaging.Client
 	storageClient  storage.ClientInterface
-	business       client.Business
+	business       string
 	taskLoadFactor float64
 	maxPodsPerJob  int64
 )
 
 const defaultTaskLoadFactor = 0.2
 const defaultMaxPodsPerJob = 100
+
+func init() {
+	gcpContext = executor.NewGcpContextFromEnv()
+
+}
 
 // init k8 client
 func init() {
@@ -46,9 +52,8 @@ func init() {
 // init sub client
 func init() {
 	var err error
-	business = client.BusinessFromEnv()
 	project := utils.Env("PROJECT_NAME")
-	subscription := business.SubscriptionName(project)
+	subscription := gcpContext.SubscriptionName()
 	subClient, err = messaging.NewSubClient(project, subscription)
 	if err != nil {
 		log.Fatalf("Could not create gcp sub client: %v", err)
@@ -58,7 +63,7 @@ func init() {
 // init storage client
 func init() {
 	var err error
-	storageClient, err = storage.NewEnvClient()
+	storageClient, err = gcpContext.NewStorageClient()
 	if err != nil {
 		log.Fatalf("Could not create gcp storage client: %v", err)
 	}
@@ -74,6 +79,25 @@ func main() {
 	log.Print("Starting orchestrator")
 	startJobWatcher()
 	subscribe()
+}
+
+func job(data []byte) error {
+
+	jobLocation, err := storage.ToLocation(data)
+	if err != nil {
+		return fmt.Errorf("Could not get location from message data (%v), error: %w", data, err)
+	}
+
+	// TODO: hack
+	session := client.NewSession("session-a", business)
+	// TODO: hack
+	job := client.NewJob("test-job", session)
+
+	err := storageClient.ForEachObject(jobLocation.Object, func(attrs *storage.ObjectAttrs) error {
+
+		job.AddTask()
+	})
+	return nil
 }
 
 func subscribe() {
@@ -178,8 +202,7 @@ func parallelism(numTasks int) int32 {
 
 // do an 'ls" on job storage directory and create location for each, convert to bytes
 func loadJobData(location storage.Location) ([][]byte, error) {
-	// get slice of storage locations
-	directory := strings.Trim(location.Object, "/")
+	directory := location.Object
 	objects, err := storageClient.ListObjects(directory)
 	if err != nil {
 		return nil, err

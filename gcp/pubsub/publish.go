@@ -11,8 +11,8 @@ import (
 )
 
 // Publish publish to topic
-func (c Client) Publish(payload []byte) (string, error) {
-	topic, err := c.topic()
+func (c Client) Publish(topicName string, payload []byte) (string, error) {
+	topic, err := c.topic(topicName)
 	if err != nil {
 		return "", err
 	}
@@ -29,9 +29,8 @@ func (c Client) Publish(payload []byte) (string, error) {
 }
 
 // PublishMany publish many payloads
-func (c Client) PublishMany(payloads [][]byte) error {
-
-	topic, err := c.topic()
+func (c Client) PublishMany(topicName string, payloads [][]byte) error {
+	topic, err := c.topic(topicName)
 	if err != nil {
 		return err
 	}
@@ -65,18 +64,15 @@ func (c Client) PublishMany(payloads [][]byte) error {
 	return nil
 }
 
-func (c Client) topic() (*pubsub.Topic, error) {
-	if c.TopicName == "" {
-		return nil, errors.New("Topic name required")
-	}
-	topic := c.Topic(c.TopicName)
+func (c Client) topic(topicName string) (*pubsub.Topic, error) {
+	topic := c.Topic(topicName)
 	ctx := context.Background()
 	ok, err := topic.Exists(ctx)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to find out if topic %q exists", c.TopicName)
+		return nil, errors.Wrapf(err, "Failed to find out if topic %q exists", topicName)
 	}
 	if !ok {
-		return nil, errors.Errorf("Topic %q does not exist", c.TopicName)
+		return nil, errors.Errorf("Topic %q does not exist", topicName)
 	}
 	return topic, nil
 }

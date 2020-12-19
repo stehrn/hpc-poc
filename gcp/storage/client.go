@@ -9,6 +9,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	gcp "cloud.google.com/go/storage"
+	"github.com/stehrn/hpc-poc/client"
 )
 
 // ClientInterface defines API client methods for storage
@@ -17,6 +18,7 @@ type ClientInterface interface {
 	ListObjects(prefix string) ([]Object, error)
 	ForEachObject(prefix string, consumer func(attrs *storage.ObjectAttrs)) error
 	Upload(location Location, content []byte) error
+	UploadMany(items client.DataSourceIterator)
 	Download(location Location) ([]byte, error)
 	Delete(location Location) error
 	LocationClient

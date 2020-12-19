@@ -4,18 +4,13 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"sync"
-
-	batchv1 "k8s.io/api/batch/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"os"
 
 	"github.com/stehrn/hpc-poc/client"
-	"github.com/stehrn/hpc-poc/kubernetes"
+	"github.com/stehrn/hpc-poc/executor"
 )
 
-var wg sync.WaitGroup
-var jobWatcher kubernetes.JobWatcher
-var myClient *client.Client
+var exe *executor.Executor
 
 // Upload test data to cluster
 // Set env variables:
@@ -26,7 +21,7 @@ var myClient *client.Client
 // Example usage when running locally:
 //
 //     go run client_test_driver.go -business=bu1 --project=hpc-poc --bucket=hpc-poc-bucket --namespace=default --session=session-a --numJobs=3
-//     go run client_test_driver.go -business=bu1 --project=hpc-poc --bucket=hpc-poc-bucket --namespace=default --session=session-a --numTasks=3
+//     go run client_test_driver.go -business=bu3 --project=hpc-poc --bucket=hpc-poc-bucket --namespace=default --session=session-a --numTasks=2
 //
 func main() {
 
@@ -45,78 +40,41 @@ func main() {
 	fmt.Scanln()
 
 	var err error
-	jobWatcher, err = kubernetes.NewClient(*namespace)
-	if err != nil {
-		panic(err)
-	}
 
-	myClient, err = client.NewClient(*project, *bucket)
+	gcpContext := &executor.GcpContext{
+		Project:    *project,
+		Namespace:  *namespace,
+		BucketName: *bucket,
+		Business:   *business}
+	exe, err = executor.New(gcpContext)
 	if err != nil {
 		log.Fatalf("Error creating client, %v", err)
 	}
 
-	if *numJobs != 0 {
-		manyJobs(*numJobs, *business, *project, *bucket)
-	} else if *numTasks != 0 {
-		manyTasks(*numTasks, *business, *sessionID)
-	}
-
-	log.Print("Waiting to finish")
-	wg.Wait()
-	log.Print("Finished")
+	executeJob(*numTasks, *business, *sessionID)
 }
 
-func manyJobs(numJobs int, business, project, bucket string) {
-	wg.Add(numJobs)
-	Business := client.Business(business)
+func executeJob(numTasks int, business, sessionName string) {
 
-	var n int
-	for n < numJobs {
-		data := []byte(fmt.Sprintf("payload %d", n))
-		location, id, err := myClient.Handle(Business, data)
-		if err != nil {
-			log.Fatalf("client.handle() err: %v", err)
-		}
-		log.Printf("Run %d, payload uploaded to cloud storage location: %s, notification sent with message ID: %s", n, location, id)
-		go watch(id)
-		n++
-	}
-}
-
-func manyTasks(numTasks int, business, session string) {
-	wg.Add(1)
-	Business := client.Business(fmt.Sprintf("%s/%s", business, session))
-
+	session := client.NewSession(sessionName, business)
+	job := client.NewJob("test-job", session)
 	var n int
 	for n < numTasks {
+		fmt.Printf("Creating task %d", n)
 		data := []byte(fmt.Sprintf("payload %d", n))
-		_, err := myClient.Upload(Business, data)
-		if err != nil {
-			log.Fatalf("client.Upload() err: %v", err)
-		}
+		job.CreateTask(data)
 		n++
 	}
+	result := exe.Execute(job)
 
-	location := myClient.Storage.LocationForObject(string(Business))
-	id, err := myClient.Publish(client.Business(business), location)
+	err := result.Watch()
+
 	if err != nil {
-		log.Fatalf("client.Publish() err: %v", err)
-	}
-	log.Printf("Payload uploaded to cloud storage location: %s, notification sent with message ID: %s", location, id)
-	go watch(id)
-}
-
-func watch(messageID string) error {
-	log.Printf("Listening to subscription %q", messageID)
-
-	options := metav1.ListOptions{LabelSelector: fmt.Sprintf("gcp.pubsub.subscription.id=%s", messageID)}
-	err := jobWatcher.Watch(options, kubernetes.ANY, func(job *batchv1.Job) {
-		state, done := kubernetes.FINISHED(job.Status)
-		log.Printf("Received update for Job %q, status: %v", job.Name, state)
-		if done {
-			log.Printf("Job %q finished", job.Name)
-			wg.Done()
+		log.Printf("%v", err)
+		cxlErr := exe.Cancel(job)
+		if cxlErr != nil {
+			log.Printf("Error cancelling job: %v", cxlErr)
 		}
-	})
-	return err
+		os.Exit(1)
+	}
 }

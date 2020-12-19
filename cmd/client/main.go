@@ -7,15 +7,19 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
+	"sync/atomic"
 
 	"github.com/stehrn/hpc-poc/client"
 	http_common "github.com/stehrn/hpc-poc/internal/http"
+	"github.com/stehrn/hpc-poc/internal/utils"
 )
 
 var businessNames []string
+var job_counter uint64
 
 func init() {
-	businessNames = client.BusinessNamesFromEnv()
+	businessNames = strings.Split(utils.Env("BUSINESS_NAMES"), ",")
 }
 
 // templateData data to render into template
@@ -43,9 +47,15 @@ func (ctx *handlerContext) handle(w http.ResponseWriter, r *http.Request) error 
 			return fmt.Errorf("ParseForm() err: %v", err)
 		}
 
-		business := client.Business(r.FormValue("business"))
+		business := r.FormValue("business")
+		session := client.NewSession("web-client-session", business)
+		atomic.AddUint64(&job_counter, 1)
+		job := client.NewJob(fmt.Sprintf("web-client-job-%d", job_counter), session)
+
 		data := []byte(r.FormValue("payload"))
-		location, id, err := ctx.client.Handle(business, data)
+		job.CreateTask(data)
+
+		location, id, err := ctx.client.Execute(job)
 		if err != nil {
 			return fmt.Errorf("client.handle() err: %v", err)
 		}

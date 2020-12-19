@@ -4,6 +4,7 @@
 https://console.cloud.google.com
 
 ## Articles 
+* https://github.com/GoogleCloudPlatform/golang-samples
 * [kubernes article this was inspired by](https://kubernetes.io/docs/tasks/job/fine-parallel-processing-work-queue/)
 * https://blog.meain.io/2019/accessing-kubernetes-api-from-pod/
 * https://cloud.google.com/pubsub/docs/quickstart-cli

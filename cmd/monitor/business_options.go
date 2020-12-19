@@ -1,11 +1,15 @@
 package main
 
-import "github.com/stehrn/hpc-poc/client"
+import (
+	"strings"
+
+	"github.com/stehrn/hpc-poc/internal/utils"
+)
 
 var businessNames []string
 
 func init() {
-	businessNames = client.BusinessNamesFromEnv()
+	businessNames = strings.Split(utils.Env("BUSINESS_NAMES"), ",")
 }
 
 // BusinessNameOptions used for populating business option widget

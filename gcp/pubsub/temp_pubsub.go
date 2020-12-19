@@ -10,7 +10,8 @@ import (
 
 // TempPubSub a temporary pubsub client intended to be short lived
 type TempPubSub struct {
-	client *Client
+	client    *Client
+	TopicName string
 }
 
 // NewTempPubSub create temp pub sub
@@ -37,9 +38,8 @@ func (c Client) NewTempPubSub(ID string) (*TempPubSub, error) {
 func (c Client) client(subID, topicID string) *TempPubSub {
 	config := &ClientConfg{
 		Project:        c.Project,
-		SubscriptionID: subID,
-		TopicName:      topicID}
-	return &TempPubSub{&Client{config, c.Client}}
+		SubscriptionID: subID}
+	return &TempPubSub{&Client{config, c.Client}, topicID}
 }
 
 // ExistingTempPubSub load existing TempPubSub
@@ -49,11 +49,6 @@ func (c Client) ExistingTempPubSub(ID string) *TempPubSub {
 	return c.client(subID, topicID)
 }
 
-// TopicName topic name
-func (t *TempPubSub) TopicName() string {
-	return t.client.TopicName
-}
-
 // SubscriptionID subscription ID
 func (t *TempPubSub) SubscriptionID() string {
 	return t.client.SubscriptionID
@@ -61,7 +56,7 @@ func (t *TempPubSub) SubscriptionID() string {
 
 // PublishMany publish to temp topic
 func (t *TempPubSub) PublishMany(payloads [][]byte) error {
-	return t.client.PublishMany(payloads)
+	return t.client.PublishMany(t.TopicName, payloads)
 }
 
 // Subscribe to temp subscription
@@ -72,17 +67,15 @@ func (t *TempPubSub) Subscribe(callback func(ctx context.Context, m *pubsub.Mess
 // Delete delete topic and subscription
 func (t *TempPubSub) Delete() error {
 
-	if t.client.TopicName != "" {
-		log.Printf("deleting topic %q\n", t.client.TopicName)
-		topic, err := t.client.topic()
-		if err != nil {
-			return fmt.Errorf("Could not load topic: %v", err)
-		}
-		ctx := context.Background()
-		err = topic.Delete(ctx)
-		if err != nil {
-			return fmt.Errorf("Could not delete topic: %v", err)
-		}
+	log.Printf("deleting topic %q\n", t.TopicName)
+	topic, err := t.client.topic(t.TopicName)
+	if err != nil {
+		return fmt.Errorf("Could not load topic: %v", err)
+	}
+	ctx := context.Background()
+	err = topic.Delete(ctx)
+	if err != nil {
+		return fmt.Errorf("Could not delete topic: %v", err)
 	}
 
 	if t.client.SubscriptionID != "" {

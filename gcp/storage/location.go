@@ -2,8 +2,8 @@ package storage
 
 import (
 	"fmt"
+	"strings"
 
-	"github.com/rs/xid"
 	"github.com/stehrn/hpc-poc/internal/utils"
 )
 
@@ -13,11 +13,16 @@ type Location struct {
 	Object string `json:"object"`
 }
 
+// IsDirectory does location represent a directory
+func (l *Location) IsDirectory() bool {
+	return strings.HasSuffix(l.Object, "/") || strings.HasSuffix(l.Object, "/*")
+}
+
 // Location generate storage bucket location
 func (c *Client) Location(business string) Location {
 	return Location{
 		Bucket: c.BucketName(),
-		Object: objectName(business, uniqueID())}
+		Object: objectName(business, utils.GenerateID())}
 }
 
 // LocationForObject generate storage bucket location for existing object
@@ -51,8 +56,4 @@ func (c *Client) ToLocationByteSlice(objects []Object) ([][]byte, error) {
 
 func objectName(business, id string) string {
 	return fmt.Sprintf("%s/%s", business, id)
-}
-
-func uniqueID() string {
-	return xid.New().String()
 }
