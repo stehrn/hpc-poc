@@ -11,45 +11,47 @@ type Location struct {
 
 See [storage-integration_test.go](storage-integration_test.go) for full set of use cases, to follow is a basic user guide to get started.
 
-# Creating locations
-
-## Define own object name
-```
-location = client.LocationForObject("my/path/object_name") 
-```
-## Generate unique object name but define own path to object
-```
-location = client.Location("my/path") 
-```
-Note bucket is derived from `CLOUD_STORAGE_BUCKET_NAME`
-
-## Create your own Location
-```
-location := Location{Bucket: "my-cuket", Object: "my/path/object_name" }
-```
-
 # Create new cloud storage client
+Create client:
 ```
-client, err := NewEnvClient()
+client, err := NewClient("<unique-project-bucket-name>")
 if err != nil {
     log.Fatal("Could not create client", err)
 }
 ```
 
-# Upload
-Upload data to object called 'object_name' located at `gsutil ls gs://${CLOUD_STORAGE_BUCKET_NAME}/my/path/object_name`:
+# Creating locations
+
+## Create new Location
+Create reference to Object location: `gs://my-unique-project-bucket/my/path/object_name`:
+```
+location := Location{Bucket: "my-unique-project-bucket", Object: "my/path/object_name" }
+```
+
+## Define own object name
+Use client to create reference to Object location: `gs://${CLOUD_STORAGE_BUCKET_NAME}/my/path/object_name`:
 ```
 location = client.LocationForObject("my/path/object_name") 
+```
+
+## Generate unique object name but define own path to object
+Use client to create reference to Object location: `gs://${CLOUD_STORAGE_BUCKET_NAME}/my/path/<unique ID>`:
+```
+location = client.Location("my/path") 
+```
+
+# Upload
+Upload data:
+```
 data := []byte("payload")
 err = client.Upload(location, data)
 if err != nil {
    log.Fatal("Could not upload data", err)
 }
 ```
-Note bucket is derived from `CLOUD_STORAGE_BUCKET_NAME`
 
 # Download
-Using location defined previously:
+Download data:
 ```
 download, err := client.Download(location)
 if err != nil {
@@ -58,7 +60,7 @@ if err != nil {
 ```
 
 # Delete
-Using location defined previously:
+Delete an object:
 ```
 err = client.Delete(location)
 if err != nil {
@@ -67,12 +69,18 @@ if err != nil {
 ```    
 
 # Integration Test
-See [storage-integration_test.go](storage-integration_test.go) 
+See [storage_integration_test.go](storage_integration_test.go) 
 
-One-off to set things up:
+## Set-up - create cloud storage bucket
+One off task, test will upload objects into bucket, and delete data before exit
 ```
 export CLOUD_STORAGE_BUCKET_NAME=<bucket name>
 gsutil mb gs://${CLOUD_STORAGE_BUCKET_NAME}
+```
+
+## Run test
+```
 export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/integration_test_key.json
+go test -v
 ```
 See [iam/README.md](iam/README.md) for info on creaitng the service account key 
