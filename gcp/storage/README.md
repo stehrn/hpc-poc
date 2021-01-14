@@ -29,13 +29,13 @@ location := Location{Bucket: "my-unique-project-bucket", Object: "my/path/object
 ```
 
 ## Define own object name
-Use client to create reference to Object location: `gs://${CLOUD_STORAGE_BUCKET_NAME}/my/path/object_name`:
+Use client to create reference to Object location: `gs://<bucket name defined in client>/my/path/object_name`:
 ```
 location = client.LocationForObject("my/path/object_name") 
 ```
 
 ## Generate unique object name but define own path to object
-Use client to create reference to Object location: `gs://${CLOUD_STORAGE_BUCKET_NAME}/my/path/<unique ID>`:
+Use client to create reference to Object location: `gs://<bucket name defined in client>/my/path/<unique ID>`:
 ```
 location = client.Location("my/path") 
 ```
