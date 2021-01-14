@@ -1,0 +1,10 @@
+title: Integraton Test
+description: Roles request by integration test
+stage: GA
+includedPermissions:
+- storage.objects.create
+- storage.objects.list
+- storage.objects.get
+- storage.objects.delete
+- storage.buckets.get
+- pubsub.topics.publish

@@ -16,9 +16,9 @@ import (
 type ClientInterface interface {
 	BucketName() string
 	ListObjects(prefix string) ([]Object, error)
-	ForEachObject(prefix string, consumer func(attrs *storage.ObjectAttrs)) error
+	ForEachObject(prefix string, consumer func(attrs *storage.ObjectAttrs) error) error
 	Upload(location Location, content []byte) error
-	UploadMany(items client.DataSourceIterator)
+	UploadMany(items client.DataSourceIterator) uint64
 	Download(location Location) ([]byte, error)
 	Delete(location Location) error
 	LocationClient
@@ -28,7 +28,6 @@ type ClientInterface interface {
 type LocationClient interface {
 	Location(business string) Location
 	LocationForObject(object string) Location
-	ToLocationByteSlice(objects []Object) ([][]byte, error)
 }
 
 // Object compact representation of a storage object
@@ -59,8 +58,8 @@ func NewEnvClient() (*Client, error) {
 }
 
 // NewClient create new storage client
-func NewClient(bucket string) (*Client, error) {
-	if bucket == "" {
+func NewClient(bucketName string) (*Client, error) {
+	if bucketName == "" {
 		return nil, errors.New("storage.NewClient: bucket cannot be blank")
 	}
 	ctx := context.Background()
@@ -68,5 +67,10 @@ func NewClient(bucket string) (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("storage.NewClient: %v", err)
 	}
-	return &Client{bucket, gcpClient}, nil
+	bucket := gcpClient.Bucket(bucketName)
+	_, err = bucket.Attrs(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("storage.NewClient, bucket %s does not exist: %v", bucketName, err)
+	}
+	return &Client{bucketName, gcpClient}, nil
 }

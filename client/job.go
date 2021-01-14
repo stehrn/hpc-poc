@@ -8,12 +8,15 @@ import (
 
 // Job represents a unit of work, made up of one or more tasks
 type Job interface {
+	Name() string
+	ID() string
 	CreateTask(data []byte) Task
 	AddTask(task Task)
 	Tasks() []Task
 	TaskIterator() TaskDataSourceIterator
 	ObjectPath() *ObjectPath
 	SetState(state State)
+	HasErrors() bool
 	Errors() map[Task][]error
 	Close()
 }
@@ -21,8 +24,8 @@ type Job interface {
 // LocalJob client side job
 type LocalJob struct {
 	Session *LocalSession
-	Name    string
-	ID      string
+	name    string
+	id      string
 	State   State
 	tasks   []Task
 }
@@ -56,13 +59,23 @@ const (
 // NewJob create a new Job with given name, id will be automatically generated
 func NewJob(name string, session *LocalSession) *LocalJob {
 	job := &LocalJob{
+		name:    name,
+		id:      utils.GenerateID(),
 		Session: session,
-		Name:    name,
 		State:   Initial,
-		ID:      utils.GenerateID(),
 	}
 	session.AddJob(job)
 	return job
+}
+
+// Name job name
+func (j *LocalJob) Name() string {
+	return j.name
+}
+
+// ID unique ID for job
+func (j *LocalJob) ID() string {
+	return j.id
 }
 
 // CreateTask create a new task for given data and adds it to this job
@@ -89,7 +102,7 @@ func (j *LocalJob) TaskIterator() TaskDataSourceIterator {
 
 // ObjectPath location for given job (parent of tasks)
 func (j *LocalJob) ObjectPath() *ObjectPath {
-	return ObjectPathForJob(j.Session.Business, j.Session.Name, j.Name)
+	return ObjectPathForJob(j.Session.Business, j.Session.Name, j.Name())
 }
 
 // SetState set state of job

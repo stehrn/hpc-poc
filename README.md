@@ -88,10 +88,6 @@ gcloud pubsub subscriptions create ${SUBSCRIPTION_NAME} --topic=${TOPIC_NAME}
 
 # Create GCP Service Accounts 
 ## Summary
-Set up following:
-* Client: 
-  * create storage objects [`storage.objectCreator`]
-  * publish [`pubsub.publisher`]
 
 * Orchestrator:
   * subscribe [`pubsub.subscriber`]

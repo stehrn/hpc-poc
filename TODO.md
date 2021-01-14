@@ -53,3 +53,17 @@ client
 
 var ErrNotFound = errors.New("not found")
         return nil, fmt.Errorf("%q: %w", name, ErrNotFound)
+
+
+
+
+
+
+kubectl create deployment nginx --image nginx:latest
+kubectl get pods 
+kubectl expose service nginx --port 80  --type LoadBalancer
+kubectl scale deployment nginx --replicas 3
+
+gcloud config set compute/zone us-central1-a
+
+

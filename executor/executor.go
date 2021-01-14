@@ -44,8 +44,8 @@ func New(gcpContext *GcpContext) (*Executor, error) {
 }
 
 // Execute run a job
-func (e Executor) Execute(job *client.Job) *Result {
-	fmt.Printf("Executing job, name: %q, ID: %s)\n", job.Name, job.ID)
+func (e Executor) Execute(job client.Job) *Result {
+	fmt.Printf("Executing job, name: %q, ID: %s)\n", job.Name(), job.ID())
 
 	// upload task data to cloud storage
 	job.SetState(client.TaskDataUploading)
@@ -60,7 +60,7 @@ func (e Executor) Execute(job *client.Job) *Result {
 
 	// send message with location of cloud storage for job
 	job.SetState(client.JobMessagePublishing)
-	location := e.Location(job.ObjectPath())
+	location := e.Location(job.ObjectPath().String())
 	messageID, err := e.publishJobStorageLocation(e.TopicName(), location)
 	if err != nil {
 		job.SetState(client.JobMessagePublishError)
@@ -75,14 +75,14 @@ func (e Executor) Execute(job *client.Job) *Result {
 }
 
 // Cancel cancel a job
-func (e Executor) Cancel(job *client.Job) error {
+func (e Executor) Cancel(job client.Job) error {
 	return e.deleteTaskData(job)
 	// TODO: send message to k8 to cancel job
 }
 
 // deleteTaskData
-func (e Executor) deleteTaskData(job *client.Job) error {
-	location := e.Location(asDirectory(job.ObjectPath()))
+func (e Executor) deleteTaskData(job client.Job) error {
+	location := e.Location(asDirectory(job.ObjectPath().String()))
 	log.Printf("Deleting data at: '%v'\n", location)
 	err := e.Storage.Delete(location)
 	if err != nil {

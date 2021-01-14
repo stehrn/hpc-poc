@@ -29,6 +29,11 @@ func ObjectPathForTask(job *ObjectPath, task string) *ObjectPath {
 	}
 }
 
+// BusinessDir directory for business
+func (p *ObjectPath) BusinessDir() string {
+	return fmt.Sprintf("%s/", p.Business)
+}
+
 func (p *ObjectPath) String() string {
 	return fmt.Sprintf("%s/%s/%s", p.Business, p.Session, p.Job)
 }

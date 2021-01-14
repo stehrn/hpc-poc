@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"sync"
+	"sync/atomic"
 
 	"github.com/stehrn/hpc-poc/client"
 )
@@ -32,25 +33,28 @@ func (c *Client) Upload(location Location, content []byte) error {
 // UploadMany upload many data items
 // scope to look into batch API here
 // no limits on number of threads
-func (c *Client) UploadMany(items client.DataSourceIterator) {
+func (c *Client) UploadMany(items client.DataSourceIterator) uint64 {
 	fmt.Printf("Uploading %d items\n", items.Size())
+	var uploaded uint64
 	var wg sync.WaitGroup
 	wg.Add(items.Size())
 	items.Each(func(item client.DataSource) {
 		go func(item client.DataSource) {
 			defer wg.Done()
-			
 			location := Location{
 				Bucket: c.BucketName(),
-				Object: item.ObjectPath()}
+				Object: item.ObjectPath().String()}
 
 			log.Printf("Uploading data to: '%v'\n", location)
 			err := c.Upload(location, item.Data())
 			if err != nil {
 				log.Printf("Error uploading data to: '%v': %v\n", location, err)
 				item.AddError(err)
+			} else {
+				atomic.AddUint64(&uploaded, 1)
 			}
 		}(item)
 	})
 	wg.Wait()
+	return uploaded
 }

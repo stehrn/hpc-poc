@@ -1,0 +1,7 @@
+title: Role Client
+description: Roles request by client to create storage objects and publish 
+stage: GA
+includedPermissions:
+- storage.objects.create
+- storage.buckets.get
+- pubsub.topics.publish
