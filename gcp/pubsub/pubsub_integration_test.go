@@ -1,7 +1,9 @@
 // Integration test for pubsub
 //
 // Following env variables required:
-// + GOOGLE_APPLICATION_CREDENTIALS
+//
+// export CLOUD_STORAGE_BUCKET_NAME=hpc-poc-bucket
+// export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/integration_test_key.json
 //
 package pubsub
 
@@ -13,8 +15,6 @@ import (
 
 	"cloud.google.com/go/pubsub"
 )
-
-// export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/key.json
 
 const project = "hpc-poc"
 const ID = "hpc-poc-int-test"
@@ -32,7 +32,7 @@ func Test(t *testing.T) {
 	var err error
 
 	t.Log("Creating new client")
-	client, err := NewPubClient(project, ID)
+	client, err := NewPubClient(project)
 	if err != nil {
 		t.Fatal("Could not create client", err)
 	}
@@ -43,11 +43,11 @@ func Test(t *testing.T) {
 		t.Fatal("Could not create temp subscription client", err)
 	}
 
-	t.Logf("Publishing to topic %q", tmpPub.client.TopicName)
+	t.Logf("Publishing to topic %q", tmpPub.TopicName)
 	payload := make([][]byte, 1)
 	payload[0] = []byte("abc")
 
-	err = tmpPub.Publish(payload)
+	err = tmpPub.PublishMany(payload)
 	if err != nil {
 		t.Fatal("Could not pulish to topic", err)
 	}
@@ -66,5 +66,7 @@ func Test(t *testing.T) {
 }
 
 func teardown() {
-	tmpPub.Delete()
+	if tmpPub != nil {
+		tmpPub.Delete()
+	}
 }

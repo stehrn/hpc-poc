@@ -7,4 +7,13 @@ includedPermissions:
 - storage.objects.get
 - storage.objects.delete
 - storage.buckets.get
+- pubsub.topics.create
+- pubsub.topics.delete
 - pubsub.topics.publish
+- pubsub.subscriptions.create
+- pubsub.subscriptions.delete
+- pubsub.subscriptions.consume
+- pubsub.subscriptions.get
+- pubsub.topics.attachSubscription
+- pubsub.topics.get
+

@@ -87,44 +87,7 @@ gcloud pubsub subscriptions create ${SUBSCRIPTION_NAME} --topic=${TOPIC_NAME}
 ```
 
 # Create GCP Service Accounts 
-## Summary
-
-* Orchestrator:
-  * subscribe [`pubsub.subscriber`]
-  * view [`pubsub.viewer`] (to check subscription exists)
-  * delete storage objects [`storage.objects.delete`]
-  * publish [`roles/editor`]
-
-* Engine:
-  * read storage objects [`storage.objectViewer`]
-
-* Monitor:
-  * read storage objects [`storage.objectViewer`]
-
-
-(see [authenticating-to-cloud-platform](https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform))
-
-For now, roles are v broad and grouped together, so more work needed here
-```
-export SERVICE_ACCOUNT=gke-sub-acc@hpc-poc.iam.gserviceaccount.com
-
-// create service sccount 
-gcloud iam service-accounts create ${SERVICE_ACCOUNT} --description="GKE subscription account" --display-name="gke-subscription"
-gcloud iam service-accounts list
-
-// add roles
-gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/pubsub.subscriber 
-gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/pubsub.publisher
-gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/pubsub.viewer
-gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/storage.objectAdmin
-gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/pubsub.editor
-
-
-// list roles
-gcloud projects get-iam-policy ${PROJECT_NAME} --flatten="bindings[].members" --format='table(bindings.role)' --filter="bindings.members:${SERVICE_ACCOUNT}"
-```
-
-* [storage iam-permissions](https://cloud.google.com/storage/docs/access-control/using-iam-permissions)
+see [iam/README.md](iam/README.md)
 
 ## Get GCP JSON key and create k8 secret
 The key is injected into container env variable `GOOGLE_APPLICATION_CREDENTIALS` (also needed if running app locally)

@@ -80,7 +80,7 @@ func (e Executor) Cancel(job client.Job) error {
 	// TODO: send message to k8 to cancel job
 }
 
-// deleteTaskData
+// deleteTaskData delete _all_ data associated with a job, called when job is cancelled
 func (e Executor) deleteTaskData(job client.Job) error {
 	location := e.Location(asDirectory(job.ObjectPath().String()))
 	log.Printf("Deleting data at: '%v'\n", location)

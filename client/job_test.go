@@ -30,7 +30,7 @@ func TestJobCreation(t *testing.T) {
 	assert.Equal(t, 2, len(session1jobs), fmt.Sprintf("Expected 2 jobs in session 1, got %d", len(session1jobs)))
 	assert.Equal(t, job2, session1jobs[1], "Unexpected job")
 
-	// crea a new session, add job
+	// create a new session, add job
 	session2 := session("session 2")
 	defer session2.Destroy()
 	job3 := NewJob("Test Job 3", session2)
@@ -63,23 +63,28 @@ func TestErrorHandling(t *testing.T) {
 	defer session.Destroy()
 	job := NewJob("Error Test Job", session)
 
-	errors := job.Errors()
-	assert.Equal(t, 0, len(errors), "Expected zero errors")
+	assert.False(t, job.HasErrors(), "Expected zero errors")
 
 	task := job.CreateTask(nil)
 	error1 := fmt.Errorf("error 1")
 	task.AddError(error1)
 
-	errors = job.Errors()
+	errors := job.TasksInError()
 	assert.Equal(t, 1, len(errors), "Expected 1 task with errors for job")
-	assert.Equal(t, 1, len(errors[task]), "Expected 1 error for task")
-	assert.Equal(t, error1, errors[task][0], "Unexpected error for task")
+	assert.Equal(t, 1, len(errors[0].Errors()), "Expected 1 error for task")
+	assert.Equal(t, error1, errors[0].Errors()[0], "Unexpected error for task")
 
 	error2 := fmt.Errorf("error 2")
 	task.AddError(error2)
-	errors = job.Errors()
-	assert.Equal(t, 1, len(errors), "Expected 1 task with errors for job")
-	assert.Equal(t, 2, len(errors[task]), "Expected 2 errors for task")
-	assert.Equal(t, error2, errors[task][1], "Unexpected error for task")
 
+	assert.True(t, job.HasErrors(), "Expected job to have errors")
+
+	errors = job.TasksInError()
+	assert.Equal(t, 1, len(errors), "Expected 1 task with errors for job")
+	assert.Equal(t, 2, len(errors[0].Errors()), "Expected 2 errors for task")
+	assert.Equal(t, error2, errors[0].Errors()[1], "Unexpected error for task")
+
+	for _, task := range job.TasksInError() {
+		t.Logf("task errors: %v\n", task.Errors())
+	}
 }

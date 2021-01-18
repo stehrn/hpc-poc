@@ -14,12 +14,19 @@ import (
 
 // ClientInterface defines API client methods for storage
 type ClientInterface interface {
+	// BucketName name of bucket client interacts with
 	BucketName() string
+	// ListObjects list objects at given prefix
 	ListObjects(prefix string) ([]Object, error)
+	// ForEachObject iteratore over objects at given prefix, passing result(s) to lamda function
 	ForEachObject(prefix string, consumer func(attrs *storage.ObjectAttrs) error) error
+	// Upload upload data to given location
 	Upload(location Location, content []byte) error
+	// UploadMany data upload if many items to upload
 	UploadMany(items client.DataSourceIterator) uint64
+	// Download download object at given location
 	Download(location Location) ([]byte, error)
+	// Delete delete object at given location
 	Delete(location Location) error
 	LocationClient
 }

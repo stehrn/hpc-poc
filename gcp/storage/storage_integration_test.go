@@ -1,8 +1,9 @@
 // Integration test for cloud storage
 //
 // Following env variables required:
-// + CLOUD_STORAGE_BUCKET_NAME (and pre created)
-// + GOOGLE_APPLICATION_CREDENTIALS
+//
+// export CLOUD_STORAGE_BUCKET_NAME=hpc-poc-bucket
+// export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/integration_test_key.json
 //
 package storage
 
@@ -15,9 +16,6 @@ import (
 	"github.com/stehrn/hpc-poc/client"
 )
 
-// export CLOUD_STORAGE_BUCKET_NAME=hpc-poc-bucket
-// export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/integration_test_key.json
-
 const business = "integration-test"
 
 var storageClient ClientInterface
@@ -29,25 +27,6 @@ func TestMain(m *testing.M) {
 	teardown()
 	os.Exit(code)
 }
-
-// func TestNik(t *testing.T) {
-
-// 	storageClient, err := NewEnvClient()
-// 	if err != nil {
-// 		t.Fatal("Could not create client", err)
-// 	}
-
-// 	// location := storageClient.LocationForObject("my/path/object")
-
-// 	location := Location{Bucket: "hpc-poc-bucket2", Object: "my/path/object_name2"}
-
-// 	data := []byte("payload")
-// 	err = storageClient.Upload(location, data)
-// 	if err != nil {
-// 		log.Fatal("Could not upload data ", err)
-// 	}
-
-// }
 
 func Test(t *testing.T) {
 

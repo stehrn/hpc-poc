@@ -20,7 +20,6 @@ var exe *executor.Executor
 //
 // Example usage when running locally:
 //
-//     go run client_test_driver.go -business=bu1 --project=hpc-poc --bucket=hpc-poc-bucket --namespace=default --session=session-a --numJobs=3
 //     go run client_test_driver.go -business=bu3 --project=hpc-poc --bucket=hpc-poc-bucket --namespace=default --session=session-a --numTasks=2
 //
 func main() {
@@ -30,12 +29,11 @@ func main() {
 	bucket := flag.String("bucket", "", "name of GCP cloud storage bucket")
 	namespace := flag.String("namespace", "", "name of kubernetes namespace")
 	sessionID := flag.String("session", "", "ID of session")
-	numJobs := flag.Int("numJobs", 0, "number of jobs to create")
 	numTasks := flag.Int("numTasks", 0, "number of tasks to create per job")
 	flag.Parse()
 
-	log.Printf("Following args passed in:\nbusiness: %q\nproject: %q\nbucket: %q\nnamespace: %q\nsessionID: %q\nnumJobs: %d\nnumTasks: %d",
-		*business, *project, *bucket, *namespace, *sessionID, *numJobs, *numTasks)
+	log.Printf("Following args passed in:\nbusiness: %q\nproject: %q\nbucket: %q\nnamespace: %q\nsessionID: %q\nnumTasks: %d",
+		*business, *project, *bucket, *namespace, *sessionID, *numTasks)
 	fmt.Println("Press the Enter Key to start")
 	fmt.Scanln()
 
@@ -67,7 +65,10 @@ func executeJob(numTasks int, business, sessionName string) {
 	}
 	result := exe.Execute(job)
 
-	err := result.Watch()
+	err := result.Error
+	if err != nil {
+		err = result.Watch()
+	}
 
 	if err != nil {
 		log.Printf("%v", err)

@@ -15,6 +15,7 @@ type TempPubSub struct {
 }
 
 // NewTempPubSub create temp pub sub
+// ID is used to create a topic and subscription
 func (c Client) NewTempPubSub(ID string) (*TempPubSub, error) {
 	ctx := context.Background()
 

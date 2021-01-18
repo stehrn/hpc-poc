@@ -17,7 +17,7 @@ type Job interface {
 	ObjectPath() *ObjectPath
 	SetState(state State)
 	HasErrors() bool
-	Errors() map[Task][]error
+	TasksInError() []Task
 	Close()
 }
 
@@ -111,16 +111,21 @@ func (j *LocalJob) SetState(state State) {
 	j.State = state
 }
 
-// Errors get back any errors associates with the Job
-func (j *LocalJob) Errors() map[Task][]error {
-	errors := make(map[Task][]error)
+// CurrentState current state of job
+func (j *LocalJob) CurrentState() State {
+	return j.State
+}
+
+// TasksInError get back any tasks with errors
+func (j *LocalJob) TasksInError() []Task {
+	var tasksInerror []Task
 	for _, task := range j.tasks {
 		taskErrors := task.Errors()
 		if taskErrors != nil {
-			errors[task] = taskErrors
+			tasksInerror = append(tasksInerror, task)
 		}
 	}
-	return errors
+	return tasksInerror
 }
 
 // HasErrors do we have any errors?
@@ -136,5 +141,5 @@ func (j *LocalJob) HasErrors() bool {
 
 // Close close off job
 func (j *LocalJob) Close() {
-	log.Printf("Closing job %q\n", j.Name)
+	log.Printf("Closing job %q\n", j.Name())
 }

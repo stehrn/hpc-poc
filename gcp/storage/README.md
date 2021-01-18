@@ -9,10 +9,10 @@ type Location struct {
 }
 ```
 
-See [storage-integration_test.go](storage-integration_test.go) for full set of use cases, to follow is a basic user guide to get started.
+See [storage_integration_test.go](storage_integration_test.go) for full set of use cases, to follow is a basic user guide to get started.
 
 # Create new cloud storage client
-Create client:
+Create client for given bucket:
 ```
 client, err := NewClient("<unique-project-bucket-name>")
 if err != nil {
@@ -83,4 +83,4 @@ gsutil mb gs://${CLOUD_STORAGE_BUCKET_NAME}
 export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/integration_test_key.json
 go test -v
 ```
-See [iam/README.md](iam/README.md) for info on creaitng the service account key 
+See [../../iam/README.md](iam/README.md) for info on creaitng the service account key 
