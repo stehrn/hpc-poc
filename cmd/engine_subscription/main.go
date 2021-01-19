@@ -42,7 +42,7 @@ func main() {
 	log.Print("Starting Engine")
 
 	for {
-		count, err := subClient.PullMsgsSync(func(ctx context.Context, m *pubsub.Message) {
+		count, err := subClient.PullMsgsSync(func(ctx context.Context, cancel context.CancelFunc, m *pubsub.Message) {
 			location, err := storage.ToLocation(m.Data)
 			if err != nil {
 				log.Printf("Could not get location from message data (%v), error: %v", m.Data, err)

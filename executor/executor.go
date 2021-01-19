@@ -49,7 +49,7 @@ func (e Executor) Execute(job client.Job) *Result {
 
 	// upload task data to cloud storage
 	job.SetState(client.TaskDataUploading)
-	e.Storage.UploadMany(job.TaskIterator())
+	e.Storage.UploadMany(e.BucketName, job.TaskIterator())
 	if job.HasErrors() {
 		// fail fast here, even though some of task data may have been uploaded.
 		// an alternative strategy might continue anyway ...
@@ -98,6 +98,7 @@ func asDirectory(path string) string {
 // publishJobStorageLocation location to topic
 func (e Executor) publishJobStorageLocation(topicName string, location storage.Location) (string, error) {
 	log.Printf("Publishing location (%v) to topic: %q\n", location, topicName)
+
 	bytes, err := location.ToBytes()
 	if err != nil {
 		return "", err

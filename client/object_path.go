@@ -35,5 +35,5 @@ func (p *ObjectPath) BusinessDir() string {
 }
 
 func (p *ObjectPath) String() string {
-	return fmt.Sprintf("%s/%s/%s", p.Business, p.Session, p.Job)
+	return fmt.Sprintf("%s/%s/%s/%s", p.Business, p.Session, p.Job, p.Task)
 }

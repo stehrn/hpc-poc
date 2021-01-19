@@ -27,8 +27,7 @@ func (c *Client) deleteObject(location Location) error {
 func (c *Client) deleteDirectory(location Location) error {
 	ctx := context.Background()
 	bucket := c.Bucket(location.Bucket)
-	prefix := location.Object
-	return c.ForEachObject(prefix, func(attrs *storage.ObjectAttrs) error {
+	return c.ForEachObject(location, func(attrs *storage.ObjectAttrs) error {
 		if err := bucket.Object(attrs.Name).Delete(ctx); err != nil {
 			return fmt.Errorf("Could not delete delete directory: %v", err)
 		}

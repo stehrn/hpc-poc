@@ -12,7 +12,7 @@ import (
 
 // Publish publish to topic
 func (c Client) Publish(topicName string, payload []byte) (string, error) {
-	topic, err := c.topic(topicName)
+	topic, err := c.GetTopic(topicName)
 	if err != nil {
 		return "", err
 	}
@@ -30,7 +30,7 @@ func (c Client) Publish(topicName string, payload []byte) (string, error) {
 
 // PublishMany publish many payloads
 func (c Client) PublishMany(topicName string, payloads [][]byte) error {
-	topic, err := c.topic(topicName)
+	topic, err := c.GetTopic(topicName)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,8 @@ func (c Client) PublishMany(topicName string, payloads [][]byte) error {
 	return nil
 }
 
-func (c Client) topic(topicName string) (*pubsub.Topic, error) {
+// GetTopic look up topic and check it exits
+func (c Client) GetTopic(topicName string) (*pubsub.Topic, error) {
 	topic := c.Topic(topicName)
 	ctx := context.Background()
 	ok, err := topic.Exists(ctx)

@@ -25,6 +25,11 @@ func NewSession(name, business string) *LocalSession {
 		Business: business}
 }
 
+// NewJob create new job
+func (s *LocalSession) NewJob(name string) *LocalJob {
+	return NewJob(name, s)
+}
+
 // AddJob add job to session
 func (s *LocalSession) AddJob(job Job) {
 	s.jobs = append(s.jobs, job)

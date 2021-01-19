@@ -32,12 +32,18 @@ func Test(t *testing.T) {
 
 	var err error
 	t.Log("Creating new client")
-	storageClient, err = NewEnvClient()
+	storageClient, err = NewClient()
 	if err != nil {
 		t.Fatal("Could not create client:", err)
 	}
 
-	location = storageClient.Location(business)
+	bucketName := BucketNameFromEnv()
+	bucketExists, err := storageClient.BucketExists(bucketName)
+	if !bucketExists {
+		t.Fatalf("Bucket %s does not exist: %v", bucketName, err)
+	}
+
+	location = NewLocation(bucketName, business)
 
 	t.Logf("Uploading to %q", location)
 	data := []byte("abc")
@@ -57,8 +63,8 @@ func Test(t *testing.T) {
 		t.Errorf("Download looks odd, got: %s, want: %s", string(download), string(data))
 	}
 
-	t.Logf("Listing storage objects for business %q", business)
-	objects, err := storageClient.ListObjects(business)
+	t.Logf("Listing storage objects for location %q", location)
+	objects, err := storageClient.ListObjects(location)
 	if err != nil {
 		t.Error("Could not list objects", err)
 	}
@@ -79,7 +85,7 @@ func Test(t *testing.T) {
 	}
 
 	t.Logf("Checking storage object deleted")
-	objects, err = storageClient.ListObjects(business)
+	objects, err = storageClient.ListObjects(location)
 	if err != nil {
 		t.Error("Could not list objects", err)
 	}
@@ -95,30 +101,32 @@ func TestUploadMany(t *testing.T) {
 
 	var err error
 	t.Log("Creating new client")
-	storageClient, err = NewEnvClient()
+	storageClient, err = NewClient()
 	if err != nil {
 		t.Fatal("Could not create client:", err)
 	}
+
+	bucketName := BucketNameFromEnv()
 
 	t.Log("Uploading many objects")
 	// var items client.DataSourceIterator
 	dataSource := &TestDataSource{data: []byte("ABC€")}
 	items := &TestDataSourceIterator{dataSource}
-	uploaded := storageClient.UploadMany(items)
+	uploaded := storageClient.UploadMany(bucketName, items)
 	if uploaded != 1 {
 		t.Error("Expected one upload")
 	}
 
 	// delete bucket...
 	location := Location{
-		Bucket: storageClient.BucketName(),
+		Bucket: BucketNameFromEnv(),
 		Object: dataSource.ObjectPath().BusinessDir()}
 
 	t.Logf("Deleting location %s, is directory: %v", location, location.IsDirectory())
 	storageClient.Delete(location)
 
-	t.Logf("Checking storage object deleted")
-	objects, err := storageClient.ListObjects(dataSource.ObjectPath().BusinessDir())
+	t.Log("Checking storage object deleted")
+	objects, err := storageClient.ListObjects(location)
 	if err != nil {
 		t.Error("Could not list objects", err)
 	}

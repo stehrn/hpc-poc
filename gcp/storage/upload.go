@@ -33,7 +33,7 @@ func (c *Client) Upload(location Location, content []byte) error {
 // UploadMany upload many data items
 // scope to look into batch API here
 // no limits on number of threads
-func (c *Client) UploadMany(items client.DataSourceIterator) uint64 {
+func (c *Client) UploadMany(bucketName string, items client.DataSourceIterator) uint64 {
 	fmt.Printf("Uploading %d items\n", items.Size())
 	var uploaded uint64
 	var wg sync.WaitGroup
@@ -42,7 +42,7 @@ func (c *Client) UploadMany(items client.DataSourceIterator) uint64 {
 		go func(item client.DataSource) {
 			defer wg.Done()
 			location := Location{
-				Bucket: c.BucketName(),
+				Bucket: bucketName,
 				Object: item.ObjectPath().String()}
 
 			log.Printf("Uploading data to: '%v'\n", location)

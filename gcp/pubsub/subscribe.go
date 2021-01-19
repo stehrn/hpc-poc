@@ -32,7 +32,7 @@ func (c Client) Subscribe(callback func(ctx context.Context, m *pubsub.Message))
 }
 
 // PullMsgsSync pull one message at a time, so that other subscribers can get a shot of processing a message
-func (c Client) PullMsgsSync(callback func(ctx context.Context, m *pubsub.Message)) (int32, error) {
+func (c Client) PullMsgsSync(callback func(ctx context.Context, cancel context.CancelFunc, m *pubsub.Message)) (int32, error) {
 	if c.SubscriptionID == "" {
 		return 0, errors.New("Subscription required")
 	}
@@ -53,8 +53,8 @@ func (c Client) PullMsgsSync(callback func(ctx context.Context, m *pubsub.Messag
 
 	var counter int32
 	err = sub.Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
-		callback(ctx, msg)
 		atomic.AddInt32(&counter, 1)
+		callback(ctx, cancel, msg)
 	})
 	if err != nil && status.Code(err) != codes.Canceled {
 		return counter, fmt.Errorf("Receive: %v", err)

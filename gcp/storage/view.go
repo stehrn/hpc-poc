@@ -15,10 +15,10 @@ import (
 const timeout = time.Second * 50
 
 // ListObjects list storage objects
-func (c *Client) ListObjects(prefix string) ([]Object, error) {
-	prefix = strings.Trim(prefix, "/")
+func (c *Client) ListObjects(location Location) ([]Object, error) {
+	prefix := strings.Trim(location.Object, "/")
 	var objects []Object
-	err := c.ForEachObject(prefix, func(attrs *storage.ObjectAttrs) error {
+	err := c.ForEachObject(NewLocation(location.Bucket, prefix), func(attrs *storage.ObjectAttrs) error {
 		object := Object{
 			Object:  attrs.Name,
 			Size:    attrs.Size,
@@ -30,7 +30,7 @@ func (c *Client) ListObjects(prefix string) ([]Object, error) {
 }
 
 // ForEachObject iterate over each storage object, which is passed to consumer
-func (c *Client) ForEachObject(prefix string, consumer func(attrs *storage.ObjectAttrs) error) error {
+func (c *Client) ForEachObject(location Location, consumer func(attrs *storage.ObjectAttrs) error) error {
 	ctx := context.Background()
 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
@@ -38,11 +38,11 @@ func (c *Client) ForEachObject(prefix string, consumer func(attrs *storage.Objec
 
 	var errors error
 	var query *storage.Query
-	if prefix != "" {
-		query = &storage.Query{Prefix: prefix}
+	if location.Object != "" {
+		query = &storage.Query{Prefix: location.Object}
 	}
 
-	bucket := c.Bucket(c.BucketName())
+	bucket := c.Bucket(location.Bucket)
 	it := bucket.Objects(ctx, query)
 	for {
 		attrs, err := it.Next()
@@ -50,7 +50,7 @@ func (c *Client) ForEachObject(prefix string, consumer func(attrs *storage.Objec
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("ListStorageObjects for prefix: '%s', error: %w", prefix, err)
+			return fmt.Errorf("ListStorageObjects for prefix: '%s', error: %w", location.Object, err)
 		}
 		err = consumer(attrs)
 		if err != nil {

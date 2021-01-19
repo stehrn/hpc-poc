@@ -27,7 +27,7 @@ func NewGcpContextFromEnv() *GcpContext {
 
 // NewStorageClient create a new storage client
 func (gcp GcpContext) NewStorageClient() (storage.ClientInterface, error) {
-	return storage.NewClient(gcp.BucketName)
+	return storage.NewClient()
 }
 
 // TopicName derive name of topic

@@ -2,7 +2,7 @@
 API to execute a job. 
 
 ## Create GCP context
-The GCP content holds some high level information used to help execute a job
+The `GCPContext` holds high level information used to help execute a job:
 ```
 gcpContext := &executor.GcpContext{
 		Project:    "<project name>",
@@ -47,7 +47,6 @@ The job will transition through several states, to see current state:
 state := job.CurrentState()
 ```
 see [../client/job.go](../client/job.go) for details on possible states, they include: "Job Created", "Task Data Uploading", and "Job Message Published"
-
 
 ## Viewing job errors
 To view any job errors, more specifically tasks in error:

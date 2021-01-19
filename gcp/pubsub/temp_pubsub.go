@@ -65,11 +65,16 @@ func (t *TempPubSub) Subscribe(callback func(ctx context.Context, m *pubsub.Mess
 	return t.client.Subscribe(callback)
 }
 
+// PullMsgsSync pull one message at a time, so that other subscribers can get a shot of processing a message
+func (t *TempPubSub) PullMsgsSync(callback func(ctx context.Context, cancel context.CancelFunc, m *pubsub.Message)) (int32, error) {
+	return t.client.PullMsgsSync(callback)
+}
+
 // Delete delete topic and subscription
 func (t *TempPubSub) Delete() error {
 
 	log.Printf("deleting topic %q\n", t.TopicName)
-	topic, err := t.client.topic(t.TopicName)
+	topic, err := t.client.GetTopic(t.TopicName)
 	if err != nil {
 		return fmt.Errorf("Could not load topic: %v", err)
 	}
