@@ -4,7 +4,7 @@
 
 # gcp
 export PROJECT_NAME=hpc-poc
-export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/key.json
+export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/client_key.json
 export CLOUD_STORAGE_BUCKET_NAME=${PROJECT_NAME}-bucket
 
 # app specific

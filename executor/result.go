@@ -15,7 +15,7 @@ import (
 type Result struct {
 	Error     error
 	namespace string
-	messageID string
+	MessageID string
 }
 
 // ErrorResult a result in error
@@ -35,11 +35,11 @@ func (r *Result) Watch() error {
 		return err
 	}
 
-	log.Printf("Listening to subscription ID %q", r.messageID)
+	log.Printf("Listening to subscription ID %q", r.MessageID)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		options := metav1.ListOptions{LabelSelector: fmt.Sprintf("gcp.pubsub.subscription.id=%s", r.messageID)}
+		options := metav1.ListOptions{LabelSelector: fmt.Sprintf("gcp.pubsub.subscription.id=%s", r.MessageID)}
 		err = jobWatcher.Watch(options, kubernetes.ANY, func(job *batchv1.Job) {
 			state, done := kubernetes.FINISHED(job.Status)
 			log.Printf("Received update for Job %q, status: %v", job.Name, state)

@@ -9,14 +9,11 @@ package storage
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stehrn/hpc-poc/client"
 )
-
-const business = "integration-test"
 
 var storageClient ClientInterface
 var location Location
@@ -28,7 +25,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func Test(t *testing.T) {
+func TestStorage(t *testing.T) {
 
 	var err error
 	t.Log("Creating new client")
@@ -37,6 +34,7 @@ func Test(t *testing.T) {
 		t.Fatal("Could not create client:", err)
 	}
 
+	business := "integration/test-storage"
 	bucketName := BucketNameFromEnv()
 	bucketExists, err := storageClient.BucketExists(bucketName)
 	if !bucketExists {
@@ -93,8 +91,6 @@ func Test(t *testing.T) {
 	if len(objects) != 0 {
 		t.Errorf("Expected zero objects, got: %v", objects)
 	}
-
-	t.Log("Test ok")
 }
 
 func TestUploadMany(t *testing.T) {
@@ -118,10 +114,7 @@ func TestUploadMany(t *testing.T) {
 	}
 
 	// delete bucket...
-	location := Location{
-		Bucket: BucketNameFromEnv(),
-		Object: dataSource.ObjectPath().BusinessDir()}
-
+	location := NewLocation(BucketNameFromEnv(), dataSource.ObjectPath().BusinessDir())
 	t.Logf("Deleting location %s, is directory: %v", location, location.IsDirectory())
 	storageClient.Delete(location)
 
@@ -139,10 +132,6 @@ func TestUploadMany(t *testing.T) {
 }
 
 func teardown() {
-	if uploaded {
-		fmt.Printf("Deleting %v", location)
-		storageClient.Delete(location)
-	}
 }
 
 type TestDataSourceIterator struct {
@@ -163,7 +152,7 @@ type TestDataSource struct {
 }
 
 func (d *TestDataSource) ObjectPath() *client.ObjectPath {
-	return client.ObjectPathForJob(business, "session-1", "job-1")
+	return client.ObjectPathForJob("integration/test-storage-many", "session-1", "job-1")
 }
 
 func (d *TestDataSource) Data() []byte {

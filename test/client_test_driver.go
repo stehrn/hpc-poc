@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/stehrn/hpc-poc/client"
 	"github.com/stehrn/hpc-poc/executor"
@@ -15,7 +14,7 @@ var exe *executor.Executor
 // Upload test data to cluster
 // Set env variables:
 //
-// export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/key.json
+// export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/client_key.json
 // export KUBE_CONFIG=${HOME}/.kube/config
 //
 // Example usage when running locally:
@@ -64,18 +63,22 @@ func executeJob(numTasks int, business, sessionName string) {
 		n++
 	}
 	result := exe.Execute(job)
-
 	err := result.Error
-	if err != nil {
-		err = result.Watch()
+
+	log.Printf("Job state: %q, has errors: %v, error: %v", job.State, job.HasErrors(), err)
+
+	if err == nil {
+		log.Printf("Watching for result")
+		// err = result.Watch()
 	}
 
 	if err != nil {
-		log.Printf("%v", err)
+		log.Printf("Error: %v", err)
 		cxlErr := exe.Cancel(job)
 		if cxlErr != nil {
 			log.Printf("Error cancelling job: %v", cxlErr)
 		}
-		os.Exit(1)
 	}
+
+	exe.Close(session)
 }

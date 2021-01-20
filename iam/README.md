@@ -1,6 +1,5 @@
 # IAM
-Information aobut service account and role create
-
+Details on service accounts and roles
 
 # Application 
 Set project name:
@@ -9,9 +8,24 @@ export PROJECT_NAME=hpc-poc
 ```
 
 ## Client 
+Create service account:
+```
+gcloud iam service-accounts create hpc-client --description="HCP client account" --display-name="HCP client account"
+export SERVICE_ACCOUNT=hpc-client@${PROJECT_NAME}.iam.gserviceaccount.com
+gcloud iam service-accounts describe ${SERVICE_ACCOUNT}
+
+Create custom role:
 ```
 gcloud iam roles create hpc.client --project=${PROJECT_NAME} --file=client_role.yaml
 gcloud iam roles describe --project=${PROJECT_NAME} hpc.client
+```
+Bind role to SA:
+```
+gcloud projects add-iam-policy-binding ${PROJECT_NAME} --member=serviceAccount:${SERVICE_ACCOUNT} --role=projects/${PROJECT_NAME}/roles/hpc.client
+```
+Create key:
+```
+gcloud iam service-accounts keys create ${HOME}/client_key.json --iam-account ${SERVICE_ACCOUNT}
 ```
 
 # Integration testing

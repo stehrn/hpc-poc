@@ -11,12 +11,14 @@ import (
 	"sync/atomic"
 
 	"github.com/stehrn/hpc-poc/client"
+	"github.com/stehrn/hpc-poc/executor"
+	"github.com/stehrn/hpc-poc/gcp/storage"
 	http_common "github.com/stehrn/hpc-poc/internal/http"
 	"github.com/stehrn/hpc-poc/internal/utils"
 )
 
 var businessNames []string
-var job_counter uint64
+var jobCounter uint64
 
 func init() {
 	businessNames = strings.Split(utils.Env("BUSINESS_NAMES"), ",")
@@ -24,18 +26,18 @@ func init() {
 
 // templateData data to render into template
 type templateData struct {
-	*client.Client
+	*executor.GcpContext
 	BusinessNames []string
 	Message       string
 }
 
 type handlerContext struct {
-	client   *client.Client
-	template *template.Template
+	gcpContext *executor.GcpContext
+	template   *template.Template
 }
 
 func (ctx handlerContext) templateData(message string) *templateData {
-	return &templateData{ctx.client, businessNames, message}
+	return &templateData{ctx.gcpContext, businessNames, message}
 }
 
 func (ctx *handlerContext) handle(w http.ResponseWriter, r *http.Request) error {
@@ -48,21 +50,27 @@ func (ctx *handlerContext) handle(w http.ResponseWriter, r *http.Request) error 
 		}
 
 		business := r.FormValue("business")
-		session := client.NewSession("web-client-session", business)
-		atomic.AddUint64(&job_counter, 1)
-		job := client.NewJob(fmt.Sprintf("web-client-job-%d", job_counter), session)
 
+		session := client.NewSession("web-client-session", business)
+		atomic.AddUint64(&jobCounter, 1)
+		job := client.NewJob(fmt.Sprintf("web-client-job-%d", jobCounter), session)
 		data := []byte(r.FormValue("payload"))
 		job.CreateTask(data)
 
-		location, id, err := ctx.client.Execute(job)
+		ctx.gcpContext.Business = business
+		exe, err := executor.New(ctx.gcpContext)
 		if err != nil {
-			return fmt.Errorf("client.handle() err: %v", err)
+			log.Fatalf("Error creating client, %v", err)
 		}
 
-		topic := business.TopicName(ctx.client.Project)
-		message := fmt.Sprintf("Data uploaded to cloud storage location: %s, notification sent to topic: '%s', message ID: %s", location, topic, id)
+		result := exe.Execute(job)
+		if result.Error != nil {
+			return fmt.Errorf("Error executing job: %v", result.Error)
+		}
+
+		message := fmt.Sprintf("Data uploaded to cloud storage location: %s, notification sent to topic: '%s', message ID: %s", job.ObjectPath().String(), exe.TopicName(), result.MessageID)
 		log.Print(message)
+
 		ctx.template.Execute(w, ctx.templateData(message))
 	}
 	return nil
@@ -75,10 +83,14 @@ func main() {
 	clientTemplate := filepath.Join(templatePath, "./index.tmpl")
 	log.Printf("Loading template from: %s", clientTemplate)
 
-	client := client.NewEnvClientOrFatal()
+	gcpContext := &executor.GcpContext{
+		Project:    "hpc-poc",
+		BucketName: storage.BucketNameFromEnv(),
+	}
+
 	ctx := &handlerContext{
-		client:   client,
-		template: template.Must(template.ParseFiles(clientTemplate))}
+		gcpContext: gcpContext,
+		template:   template.Must(template.ParseFiles(clientTemplate))}
 
 	handler := http_common.ErrorHandler(ctx.handle)
 	http.HandleFunc("/", handler)
@@ -86,7 +98,7 @@ func main() {
 
 	port := http_common.Port()
 	log.Printf("Client created for project: %s, business names: %v, bucket: %s; listening on port %s",
-		client.Project, businessNames, client.Storage.BucketName(), port)
+		gcpContext.Project, businessNames, gcpContext.BucketName, port)
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)

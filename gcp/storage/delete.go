@@ -29,7 +29,7 @@ func (c *Client) deleteDirectory(location Location) error {
 	bucket := c.Bucket(location.Bucket)
 	return c.ForEachObject(location, func(attrs *storage.ObjectAttrs) error {
 		if err := bucket.Object(attrs.Name).Delete(ctx); err != nil {
-			return fmt.Errorf("Could not delete delete directory: %v", err)
+			return fmt.Errorf("Could not delete directory: %v", err)
 		}
 		return nil
 	})

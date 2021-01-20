@@ -71,28 +71,33 @@ func (e Executor) Execute(job client.Job) *Result {
 	return &Result{
 		Error:     nil,
 		namespace: e.Namespace,
-		messageID: messageID}
+		MessageID: messageID}
 }
 
 // Cancel cancel a job
+// This will delete task data associated with job
 func (e Executor) Cancel(job client.Job) error {
-	return e.deleteTaskData(job)
+	log.Printf("Cancelling job: '%v'\n", job)
+	location := e.Location(job.ObjectPath().JobDir())
+	return e.deleteData(location)
 	// TODO: send message to k8 to cancel job
 }
 
-// deleteTaskData delete _all_ data associated with a job, called when job is cancelled
-func (e Executor) deleteTaskData(job client.Job) error {
-	location := e.Location(asDirectory(job.ObjectPath().String()))
+// Close close a session
+// This will delete job data associated with session
+func (e Executor) Close(session client.Session) error {
+	log.Printf("Closing session: '%v'\n", session)
+	location := e.Location(session.ObjectPath().SessionDir())
+	return e.deleteData(location)
+}
+
+func (e Executor) deleteData(location storage.Location) error {
 	log.Printf("Deleting data at: '%v'\n", location)
 	err := e.Storage.Delete(location)
 	if err != nil {
 		return fmt.Errorf("%q: %w", location, ErrorDeletingTaskDataObjectNotFound)
 	}
 	return nil
-}
-
-func asDirectory(path string) string {
-	return fmt.Sprintf("%s/", path)
 }
 
 // publishJobStorageLocation location to topic

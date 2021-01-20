@@ -34,7 +34,7 @@ func NewEnvClient() (*Client, error) {
 // NewClient create new client
 func NewClient(namespace string) (*Client, error) {
 	if namespace == "" {
-		return nil, errors.New("COuld not create k8 client, 'namspace' required")
+		return nil, errors.New("Could not create k8 client, 'namspace' required")
 	}
 	log.Printf("Creating k8 client for namespace: %s", namespace)
 	clientset, err := clientset()

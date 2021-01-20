@@ -14,9 +14,9 @@ See [storage_integration_test.go](storage_integration_test.go) for full set of u
 # Create new cloud storage client
 Create client for given bucket:
 ```
-client, err := NewClient("<unique-project-bucket-name>")
+client, err := NewClient("[unique-project-bucket-name]")
 if err != nil {
-    log.Fatal("Could not create client", err)
+    log.Fatal("Could not create storage client", err)
 }
 ```
 
@@ -86,7 +86,7 @@ Expect to see something like below, which prints out name of object, its size, a
 {view/test/c02pdsgbigpemi9u0k1g 9 2021-01-18 14:10:58.006 +0000 UTC}
 ```
 
-Alternative would be to use `ForEachObject`, which provides access to _all_ object attributes
+Alternatively, use `ForEachObject`, which provides access to _all_ object attributes
 ```
 client.ForEachObject(NewLocation(bucket, path), func(attrs *storage.ObjectAttrs) error {
   fmt.Println(attrs)
@@ -107,14 +107,15 @@ if err != nil {
 See [storage_integration_test.go](storage_integration_test.go) 
 
 ## Set-up - create cloud storage bucket
-One off task, test will upload objects into bucket, and delete data before exit
+One off task to create bucket, test will upload objects into bucket, and delete data before exit
 ```
-export CLOUD_STORAGE_BUCKET_NAME=<bucket name>
+export CLOUD_STORAGE_BUCKET_NAME=[bucket name]
 gsutil mb gs://${CLOUD_STORAGE_BUCKET_NAME}
 ```
 
 ## Run test
 ```
+export CLOUD_STORAGE_BUCKET_NAME=[bucket name]
 export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/integration_test_key.json
 go test -v
 ```

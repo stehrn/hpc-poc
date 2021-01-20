@@ -35,6 +35,20 @@ func NewLocationFromFromEnv() Location {
 	return Location{bucket, object}
 }
 
+// AsDirectory convert location into directory (add '/' or '/*')
+func (l *Location) AsDirectory(wildcard bool) Location {
+	var append string
+	if wildcard {
+		append = "/*"
+	} else {
+		append = "/"
+	}
+	if !strings.HasSuffix(l.Object, append) {
+		return NewLocation(l.Bucket, fmt.Sprintf("%s%s", l.Object, append))
+	}
+	return *l
+}
+
 // IsDirectory does location represent a directory
 func (l *Location) IsDirectory() bool {
 	return strings.HasSuffix(l.Object, "/") || strings.HasSuffix(l.Object, "/*")

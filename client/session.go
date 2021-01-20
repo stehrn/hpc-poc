@@ -6,6 +6,7 @@ import "github.com/stehrn/hpc-poc/internal/utils"
 type Session interface {
 	AddJob(job Job)
 	Jobs() []Job
+	ObjectPath() *ObjectPath
 	Destroy()
 }
 
@@ -38,6 +39,11 @@ func (s *LocalSession) AddJob(job Job) {
 // Jobs return jobs for this session
 func (s *LocalSession) Jobs() []Job {
 	return s.jobs
+}
+
+// ObjectPath location for given session (parent of jobs)
+func (s *LocalSession) ObjectPath() *ObjectPath {
+	return ObjectPathForSession(s.Business, s.Name)
 }
 
 // Destroy destroy the session, closing all jobs associated with the session

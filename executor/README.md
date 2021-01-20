@@ -1,14 +1,18 @@
 # Executor
-API to execute a job. 
+API to submit a job for processing on on GCP Google Kubernetes Engine (GKE). There's a clean separation between task submission via the executor, and task execution controlled by a separate _orchestrator_ running on GKE, the executor will:
 
+* Upload task data to a _cloud storage bucket_
+* Use _cloud pub/sub_ to publish message containing location of task data 
+
+An orchestrator process running in GKE will subscribe to the messages and process the task data. 
 ## Create GCP context
 The `GCPContext` holds high level information used to help execute a job:
 ```
 gcpContext := &executor.GcpContext{
-		Project:    "<project name>",
-		Namespace:  "<kubernetes namespace>",
-		BucketName: "<cloud storage bucket name>",
-		Business:   "<business name>"}
+		Project:    "[project name]",
+		Namespace:  "[kubernetes namespace]",
+		BucketName: "[cloud storage bucket name]",
+		Business:   "[business name]"}
 ```
 ## Create executor client
 ```
@@ -17,7 +21,7 @@ if err != nil {
    log.Fatalf("Error creating client, %v", err)
 }
 ```
-## Run job on GKE
+## Run job 
 ```
 job := ...
 result := exe.Execute(job)

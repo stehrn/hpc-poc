@@ -52,6 +52,7 @@ func (c *Client) ForEachObject(location Location, consumer func(attrs *storage.O
 		if err != nil {
 			return fmt.Errorf("ListStorageObjects for prefix: '%s', error: %w", location.Object, err)
 		}
+
 		err = consumer(attrs)
 		if err != nil {
 			multierror.Append(errors, err)

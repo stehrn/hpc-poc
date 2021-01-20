@@ -1,7 +1,10 @@
-title: Role Client
+title: HCP Client
 description: Roles request by client to create storage objects and publish 
 stage: GA
 includedPermissions:
 - storage.objects.create
+- storage.objects.delete
+- storage.objects.list
 - storage.buckets.get
+- pubsub.topics.get
 - pubsub.topics.publish

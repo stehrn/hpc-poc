@@ -20,3 +20,8 @@ https://cloud.google.com/cloud-build/docs/building/build-go
 
 Pushes go binary to storage bucket, not used for container
 
+
+
+gcloud pubsub subscriptions create tmp-nik-sub --topic projects/hpc-poc/topics/hpc-poc-bu3-topic  
+projects/hpc-poc/subscriptions/tmp-nik-sub
+
