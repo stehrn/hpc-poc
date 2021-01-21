@@ -116,6 +116,7 @@ func subscribe() {
 			Parallelism: parallelism,
 			Labels:      labels(jobLocation, fmt.Sprint(numTasks), m.ID),
 			Env:         env}
+		
 		log.Printf("Creating Job with options: %v", options)
 		_, err = k8Client.CreateJob(options)
 		if err != nil {
