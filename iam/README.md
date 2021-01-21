@@ -13,7 +13,7 @@ Create service account:
 gcloud iam service-accounts create hpc-client --description="HCP client account" --display-name="HCP client account"
 export SERVICE_ACCOUNT=hpc-client@${PROJECT_NAME}.iam.gserviceaccount.com
 gcloud iam service-accounts describe ${SERVICE_ACCOUNT}
-
+```
 Create custom role:
 ```
 gcloud iam roles create hpc.client --project=${PROJECT_NAME} --file=client_role.yaml

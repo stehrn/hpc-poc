@@ -3,6 +3,7 @@ package executor
 import (
 	"fmt"
 
+	"github.com/stehrn/hpc-poc/gcp/pubsub"
 	"github.com/stehrn/hpc-poc/gcp/storage"
 	"github.com/stehrn/hpc-poc/internal/utils"
 )
@@ -28,6 +29,13 @@ func NewGcpContextFromEnv() *GcpContext {
 // NewStorageClient create a new storage client
 func (gcp GcpContext) NewStorageClient() (storage.ClientInterface, error) {
 	return storage.NewClient()
+}
+
+// NewSubClient create new subscription client
+func (gcp GcpContext) NewSubClient() (*pubsub.Client, error) {
+	project := gcp.Project
+	subscription := gcp.SubscriptionName()
+	return pubsub.NewSubClient(project, subscription)
 }
 
 // TopicName derive name of topic

@@ -13,7 +13,7 @@ export CLOUD_STORAGE_BUCKET_NAME=${PROJECT_NAME}-bucket
 export IMAGE_REGISTRY=gcr.io/${PROJECT_NAME}
 
 #  app specific
-export BUSINESS_NAME=bu3
+export BUSINESS_NAME=bu2
 export TASK_LOAD_FACTOR=0.6
 
 go run *.go

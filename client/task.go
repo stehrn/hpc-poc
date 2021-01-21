@@ -29,6 +29,14 @@ func newTask(job Job, data []byte) *LocalTask {
 	}
 }
 
+// NewTaskProxy create proxy to exisitng task
+func NewTaskProxy(job Job, ID string) *LocalTask {
+	return &LocalTask{
+		job: job,
+		ID:  ID,
+	}
+}
+
 // ObjectPath location for given task
 func (t *LocalTask) ObjectPath() *ObjectPath {
 	return ObjectPathForTask(t.job.ObjectPath(), t.ID)

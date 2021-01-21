@@ -1,6 +1,9 @@
 package client
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // ObjectPath path to an object, used when deriving object path in cloud storage, which is a function of below attributes
 type ObjectPath struct {
@@ -35,6 +38,20 @@ func ObjectPathForTask(job *ObjectPath, task string) *ObjectPath {
 		Job:      job.Job,
 		Task:     task,
 	}
+}
+
+// Parse prase a string like bu2/web-client-session/web-client-job-1/c048mugbigp86pbtv9sg into an *ObjectPath
+func ParseObjectPath(object string) (*ObjectPath, error) {
+	parts := strings.Split(object, "/")
+	if len(parts) != 4 {
+		return nil, fmt.Errorf("Could not pase %s, expected 4 parts, got %d", object, len(parts))
+	}
+	return &ObjectPath{
+		Business: parts[0],
+		Session:  parts[1],
+		Job:      parts[2],
+		Task:     parts[3],
+	}, nil
 }
 
 // BusinessDir directory for business (appends /)

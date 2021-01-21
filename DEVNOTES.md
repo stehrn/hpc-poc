@@ -25,3 +25,19 @@ Pushes go binary to storage bucket, not used for container
 gcloud pubsub subscriptions create tmp-nik-sub --topic projects/hpc-poc/topics/hpc-poc-bu3-topic  
 projects/hpc-poc/subscriptions/tmp-nik-sub
 
+
+
+func analyzeSentiment(ctx context.Context, client *language.Client, text string) (*languagepb.AnalyzeSentimentResponse, error) {
+        return client.AnalyzeSentiment(ctx, &languagepb.AnalyzeSentimentRequest{
+                Document: &languagepb.Document{
+                        Source: &languagepb.Document_Content{
+                                Content: text,
+                        },
+                        Type: languagepb.Document_PLAIN_TEXT,
+                },
+        })
+}
+
+gcloud ml language analyze-entity-sentiment --content="I love R&B music. Marvin Gaye is the best. 'What's Going On' is one of my favorite songs. It was so sad when Marvin Gaye died."
+
+https://github.com/mchmarny/tfeel

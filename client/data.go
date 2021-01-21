@@ -16,7 +16,7 @@ type DataSourceIterator interface {
 	Size() int
 }
 
-// TaskDataSourceIterator a DataSource iterator
+// TaskDataSourceIterator a DataSource iterator for Tasks
 type TaskDataSourceIterator []Task
 
 // Each handle DataSource iteration
